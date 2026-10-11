@@ -13,6 +13,7 @@ import { TrendingDown, TrendingUp, Lightbulb, BarChart3, Calendar } from 'lucide
 import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import type { Category, Tag } from '@/lib/types/database'
+import { getCategoryColor, getTagColor, getBadgeStyles } from '@/lib/utils/colors'
 
 interface AnalyticsClientProps {
   categories: Pick<Category, 'id' | 'name' | 'color'>[]
@@ -21,9 +22,6 @@ interface AnalyticsClientProps {
   defaultFrom: string
   defaultTo: string
 }
-
-const MONO_LIGHT = ['#000000', '#2c2c2e', '#48484a', '#636366', '#8e8e93', '#aeaeb2', '#c7c7cc', '#d1d1d6']
-const MONO_DARK = ['#ffffff', '#e5e5ea', '#d1d1d6', '#aeaeb2', '#8e8e93', '#636366', '#48484a', '#2c2c2e']
 
 const DATE_PRESETS = [
   { key: 'this_month', label: 'This Month' },
@@ -38,7 +36,6 @@ export function AnalyticsClient({
 }: AnalyticsClientProps) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
-  const monoPalette = isDark ? MONO_DARK : MONO_LIGHT
 
   const [dateFrom, setDateFrom] = useState(defaultFrom)
   const [dateTo, setDateTo] = useState(defaultTo)
@@ -73,7 +70,7 @@ export function AnalyticsClient({
       .select(`
         id, amount, transaction_date, category_id,
         categories:category_id ( id, name, color ),
-        expense_tags ( tags ( id, name, color ) )
+        expense_tags ( tag:tags ( id, name, color ) )
       `)
       .gte('transaction_date', dateFrom)
       .lte('transaction_date', dateTo)
@@ -93,7 +90,7 @@ export function AnalyticsClient({
     setExpenses((curr ?? []).map((e: any) => ({
       ...e,
       category: e.categories,
-      tags: (e.expense_tags ?? []).map((et: any) => et.tags).filter(Boolean),
+      tags: (e.expense_tags ?? []).map((et: any) => et.tag ?? et.tags).filter(Boolean),
     })))
     setPrevExpenses(prevData ?? [])
     setLoading(false)
@@ -141,9 +138,10 @@ export function AnalyticsClient({
   for (const e of expenses) {
     const key = e.category?.id ?? 'uncategorized'
     if (!categoryMap[key]) {
+      const name = e.category?.name ?? 'Uncategorized'
       categoryMap[key] = {
-        name: e.category?.name ?? 'Uncategorized',
-        color: '',
+        name,
+        color: getCategoryColor(name, e.category?.color),
         total: 0,
       }
     }
@@ -156,7 +154,12 @@ export function AnalyticsClient({
   for (const e of expenses) {
     for (const tag of e.tags ?? []) {
       if (!tagMap[tag.id]) {
-        tagMap[tag.id] = { name: tag.name, color: tag.color, total: 0, count: 0 }
+        tagMap[tag.id] = {
+          name: tag.name,
+          color: getTagColor(tag.name, tag.color),
+          total: 0,
+          count: 0,
+        }
       }
       tagMap[tag.id].total += Number(e.amount)
       tagMap[tag.id].count++
@@ -366,8 +369,8 @@ export function AnalyticsClient({
                       nameKey="name"
                       stroke="none"
                     >
-                      {categoryData.map((entry, i) => (
-                        <Cell key={entry.name} fill={monoPalette[i % monoPalette.length]} />
+                      {categoryData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<ChartTooltipContent />} />
@@ -386,15 +389,15 @@ export function AnalyticsClient({
 
             {/* Category Breakdown List */}
             <div className="md:col-span-7 space-y-2.5 max-h-72 overflow-y-auto pr-1">
-              {categoryData.map((cat, i) => {
+              {categoryData.map((cat) => {
                 const pct = totalSpend > 0 ? (cat.total / totalSpend) * 100 : 0
                 return (
                   <div key={cat.name} className="space-y-1.5 p-2 rounded-[var(--radius-sm)] transition-colors hover:bg-[var(--color-surface-hover)]">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ background: monoPalette[i % monoPalette.length] }}
+                          className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                          style={{ backgroundColor: cat.color }}
                         />
                         <span className="font-semibold text-[var(--color-text-primary)] truncate">
                           {cat.name}
@@ -414,7 +417,7 @@ export function AnalyticsClient({
                         className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{
                           width: `${pct}%`,
-                          background: monoPalette[i % monoPalette.length],
+                          backgroundColor: cat.color,
                         }}
                       />
                     </div>
@@ -505,14 +508,21 @@ export function AnalyticsClient({
             <div className="space-y-3">
               {tagData.map((tag) => (
                 <div key={tag.name} className="flex items-center gap-3">
-                  <span className="badge text-[0.6875rem] px-2.5 py-1 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)] shrink-0 font-medium">
+                  <span
+                    className="text-[0.6875rem] px-2.5 py-1 rounded-full border shrink-0 font-medium"
+                    style={getBadgeStyles(tag.color)}
+                  >
                     #{tag.name}
                   </span>
                   <div className="flex-1">
                     <div className="h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
-                      <div className="h-full rounded-full bg-black dark:bg-white" style={{
-                        width: `${totalSpend > 0 ? (tag.total / totalSpend) * 100 : 0}%`,
-                      }} />
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${totalSpend > 0 ? (tag.total / totalSpend) * 100 : 0}%`,
+                          backgroundColor: tag.color,
+                        }}
+                      />
                     </div>
                   </div>
                   <div className="shrink-0 text-right">

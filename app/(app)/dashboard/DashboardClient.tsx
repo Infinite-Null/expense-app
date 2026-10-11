@@ -22,6 +22,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { useTheme } from '@/components/providers/ThemeProvider'
+import { getCategoryColor } from '@/lib/utils/colors'
 
 interface DashboardClientProps {
   displayName: string | null | undefined
@@ -44,26 +45,6 @@ interface DashboardClientProps {
   }[]
   categoryBreakdown: { name: string; color: string | null; total: number }[]
 }
-
-const MONO_COLORS_LIGHT = [
-  '#000000',
-  '#333336',
-  '#5c5c60',
-  '#8e8e93',
-  '#aeaeb2',
-  '#c7c7cc',
-  '#d1d1d6',
-]
-
-const MONO_COLORS_DARK = [
-  '#ffffff',
-  '#d1d1d6',
-  '#aeaeb2',
-  '#8e8e93',
-  '#636366',
-  '#48484a',
-  '#2c2c2e',
-]
 
 function MetricTile({
   label,
@@ -107,8 +88,6 @@ export function DashboardClient({
   categoryBreakdown,
 }: DashboardClientProps) {
   const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
-  const monoPalette = isDark ? MONO_COLORS_DARK : MONO_COLORS_LIGHT
 
   const now = new Date()
   const greeting =
@@ -122,10 +101,10 @@ export function DashboardClient({
   const monthName = now.toLocaleString('default', { month: 'long' })
   const isSpendingDown = monthChange !== null && monthChange < 0
 
-  const pieData = categoryBreakdown.map((c, i) => ({
+  const pieData = categoryBreakdown.map((c) => ({
     name: c.name,
     value: c.total,
-    color: monoPalette[i % monoPalette.length],
+    color: getCategoryColor(c.name, c.color),
   }))
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -343,9 +322,20 @@ export function DashboardClient({
                       <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
                         {expense.title}
                       </p>
-                      <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate">
-                        {expense.merchant ?? expense.category?.name ?? 'Uncategorized'} · {formatShortDate(expense.transaction_date)}
-                      </p>
+                      <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate flex items-center gap-1.5 mt-0.5">
+                        {expense.merchant && <span>{expense.merchant} ·</span>}
+                        <span
+                          className="inline-flex items-center gap-1 font-medium"
+                          style={{ color: getCategoryColor(expense.category?.name, expense.category?.color) }}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: getCategoryColor(expense.category?.name, expense.category?.color) }}
+                          />
+                          {expense.category?.name ?? 'Uncategorized'}
+                        </span>
+                        <span>· {formatShortDate(expense.transaction_date)}</span>
+                      </div>
                     </div>
                   </div>
 

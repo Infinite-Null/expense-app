@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/Toaster'
 import { formatDateForInput } from '@/lib/utils/dates'
 import type { Category, Tag, Expense } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
+import { getTagColor } from '@/lib/utils/colors'
 
 const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'JPY', 'AED', 'SGD', 'CAD', 'AUD']
 const PAYMENT_METHODS = [
@@ -84,9 +85,10 @@ export function ExpenseForm({
     if (!user) return
 
     const normalizedName = newTagName.trim().toLowerCase()
+    const tagColor = getTagColor(normalizedName)
     const { data, error } = await supabase
       .from('tags')
-      .insert({ user_id: user.id, name: normalizedName, color: '#6B7280' })
+      .insert({ user_id: user.id, name: normalizedName, color: tagColor })
       .select()
       .single()
 
@@ -278,17 +280,27 @@ export function ExpenseForm({
         <div className="flex flex-wrap gap-2 mb-3">
           {allTags.map((tag) => {
             const selected = selectedTags.some((t) => t.id === tag.id)
+            const color = getTagColor(tag.name, tag.color)
             return (
               <button
                 key={tag.id}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={cn(
-                  'badge text-xs px-2.5 py-1 transition-all cursor-pointer select-none rounded-full border',
+                className="text-xs px-2.5 py-1 transition-all cursor-pointer select-none rounded-full border font-medium active:scale-95"
+                style={
                   selected
-                    ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
-                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)]'
-                )}
+                    ? {
+                        backgroundColor: color,
+                        color: '#ffffff',
+                        borderColor: color,
+                        boxShadow: `0 2px 8px ${color}40`,
+                      }
+                    : {
+                        backgroundColor: `${color}15`,
+                        color: color,
+                        borderColor: `${color}35`,
+                      }
+                }
                 aria-pressed={selected}
               >
                 #{tag.name}

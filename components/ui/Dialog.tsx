@@ -81,8 +81,9 @@ export function Dialog({
         ref={dialogRef}
         className={cn(
           'relative w-full rounded-[var(--radius-xl)] shadow-2xl',
-          'bg-[var(--color-surface-elevated)] backdrop-blur-2xl border border-[var(--color-border-primary)] dark:border-white/10',
-          'fade-in z-10',
+          'bg-white dark:bg-[#1c1c1e] text-zinc-900 dark:text-zinc-100',
+          'border border-zinc-200/90 dark:border-white/10',
+          'backdrop-blur-2xl fade-in z-10',
           SIZE_CLASS[size],
           className
         )}
@@ -92,14 +93,14 @@ export function Dialog({
           <div>
             <h2
               id="dialog-title"
-              className="text-lg font-semibold text-[var(--color-text-primary)] leading-tight tracking-tight"
+              className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 leading-tight tracking-tight"
             >
               {title}
             </h2>
             {description && (
               <p
                 id="dialog-description"
-                className="text-sm text-[var(--color-text-secondary)] mt-1.5 leading-relaxed"
+                className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed"
               >
                 {description}
               </p>
@@ -107,7 +108,7 @@ export function Dialog({
           </div>
           <button
             onClick={onClose}
-            className="flex-shrink-0 ml-4 p-1.5 rounded-[var(--radius-sm)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="flex-shrink-0 ml-4 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -148,15 +149,22 @@ export function ConfirmDialog({
   return (
     <Dialog open={open} onClose={onClose} title={title} description={description} size="sm">
       <div className="flex gap-3 mt-6 pt-1">
-        <button onClick={onClose} className="btn-secondary flex-1 h-10 text-sm font-medium">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 h-10 px-4 rounded-xl text-sm font-medium transition-all bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700/60 active:scale-95 cursor-pointer"
+        >
           {cancelLabel}
         </button>
         <button
+          type="button"
           onClick={onConfirm}
           disabled={loading}
           className={cn(
-            'flex-1 h-10 text-sm font-semibold',
-            variant === 'destructive' ? 'btn-destructive' : 'btn-primary'
+            'flex-1 h-10 px-4 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 cursor-pointer',
+            variant === 'destructive'
+              ? 'bg-red-600 hover:bg-red-700 text-white shadow-sm'
+              : 'bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black shadow-sm'
           )}
         >
           {loading ? 'Loading...' : confirmLabel}

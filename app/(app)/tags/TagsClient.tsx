@@ -13,11 +13,9 @@ import { Button } from '@/components/ui/Button'
 import type { Tag } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 
-const TAG_COLORS = [
-  '#000000', '#1c1c1e', '#3a3a3c', '#545458',
-  '#767680', '#8e8e93', '#aeaeb2', '#c7c7cc',
-  '#d1d1d6', '#e5e5ea', '#f2f2f7', '#ffffff',
-]
+import { TAG_COLOR_PALETTE, getTagColor, getBadgeStyles } from '@/lib/utils/colors'
+
+const TAG_COLORS = TAG_COLOR_PALETTE
 
 interface TagsClientProps {
   tags: Tag[]
@@ -41,7 +39,7 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
     formState: { errors, isSubmitting },
   } = useForm<TagFormValues>({
     resolver: zodResolver(tagSchema),
-    defaultValues: { name: '', color: '#000000' },
+    defaultValues: { name: '', color: TAG_COLOR_PALETTE[0] },
   })
 
   const selectedColor = watch('color')
@@ -52,13 +50,13 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
 
   function openCreate() {
     setEditing(null)
-    reset({ name: '', color: '#000000' })
+    reset({ name: '', color: TAG_COLOR_PALETTE[Math.floor(Math.random() * TAG_COLOR_PALETTE.length)] })
     setShowModal(true)
   }
 
   function openEdit(tag: Tag) {
     setEditing(tag)
-    reset({ name: tag.name, color: tag.color })
+    reset({ name: tag.name, color: getTagColor(tag.name, tag.color) })
     setShowModal(true)
   }
 
@@ -188,20 +186,21 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {filteredTags.map((tag) => (
-            <div
-              key={tag.id}
-              className="apple-card p-4 flex items-center justify-between group hover:border-[var(--color-border-hover)] transition-all"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
-                  style={{ backgroundColor: tag.color }}
-                />
-                <span className="font-medium text-sm text-[var(--color-text-primary)] truncate">
-                  #{tag.name}
-                </span>
-              </div>
+          {filteredTags.map((tag) => {
+            const color = getTagColor(tag.name, tag.color)
+            return (
+              <div
+                key={tag.id}
+                className="apple-card p-4 flex items-center justify-between group hover:border-[var(--color-border-hover)] transition-all"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className="text-xs px-2.5 py-1 rounded-full border shrink-0 font-medium"
+                    style={getBadgeStyles(color)}
+                  >
+                    #{tag.name}
+                  </span>
+                </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 <button
                   onClick={() => openEdit(tag)}
@@ -212,14 +211,15 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
                 </button>
                 <button
                   onClick={() => setDeleteTarget(tag)}
-                  className="p-1.5 rounded-md hover:bg-[var(--color-error)]/10 text-[var(--color-text-tertiary)] hover:text-[var(--color-error)] transition-colors"
+                  className="p-1.5 rounded-md hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors"
                   aria-label={`Delete ${tag.name}`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
-          ))}
+          )
+        })}
         </div>
       )}
 

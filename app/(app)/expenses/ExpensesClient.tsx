@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils/cn'
 import { ConfirmDialog } from '@/components/ui/Dialog'
 import { useToast } from '@/components/ui/Toaster'
 import type { ExpenseWithRelations, Category, Tag } from '@/lib/types/database'
+import { getCategoryColor, getBadgeStyles } from '@/lib/utils/colors'
 
 const PAGE_SIZE = 20
 
@@ -521,16 +522,35 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
                       href={`/expenses/${expense.id}`}
                       className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity"
                     >
-                      <div className="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center shrink-0">
-                        <Receipt className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                      <div
+                        className="w-9 h-9 rounded-full border flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: `${getCategoryColor(expense.category?.name, expense.category?.color)}15`,
+                          borderColor: `${getCategoryColor(expense.category?.name, expense.category?.color)}30`,
+                        }}
+                      >
+                        <Receipt
+                          className="w-4 h-4"
+                          style={{ color: getCategoryColor(expense.category?.name, expense.category?.color) }}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
                           {expense.title}
                         </p>
-                        <p className="text-xs text-[var(--color-text-tertiary)] truncate">
-                          {formatDate(expense.transaction_date, 'dd MMM')} ·{' '}
-                          {expense.category?.name ?? 'Uncategorized'}
+                        <p className="text-xs text-[var(--color-text-tertiary)] truncate flex items-center gap-1.5 mt-0.5">
+                          <span>{formatDate(expense.transaction_date, 'dd MMM')}</span>
+                          <span>·</span>
+                          <span
+                            className="font-medium inline-flex items-center gap-1"
+                            style={{ color: getCategoryColor(expense.category?.name, expense.category?.color) }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: getCategoryColor(expense.category?.name, expense.category?.color) }}
+                            />
+                            {expense.category?.name ?? 'Uncategorized'}
+                          </span>
                         </p>
                       </div>
                     </Link>
@@ -640,9 +660,22 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
 
                     <Link
                       href={`/expenses/${expense.id}`}
-                      className="text-sm text-[var(--color-text-secondary)] truncate"
+                      className="text-sm truncate flex items-center"
                     >
-                      {expense.category?.name ?? '—'}
+                      {expense.category?.name ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                          style={getBadgeStyles(getCategoryColor(expense.category.name, expense.category.color))}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: getCategoryColor(expense.category.name, expense.category.color) }}
+                          />
+                          {expense.category.name}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--color-text-tertiary)]">—</span>
+                      )}
                     </Link>
 
                     <Link

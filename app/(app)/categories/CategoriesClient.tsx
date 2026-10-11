@@ -13,11 +13,9 @@ import { Button } from '@/components/ui/Button'
 import type { Category } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 
-const CATEGORY_COLORS = [
-  '#000000', '#1c1c1e', '#3a3a3c', '#545458',
-  '#767680', '#8e8e93', '#aeaeb2', '#c7c7cc',
-  '#d1d1d6', '#e5e5ea', '#f2f2f7', '#ffffff',
-]
+import { CATEGORY_COLOR_PALETTE, getCategoryColor } from '@/lib/utils/colors'
+
+const CATEGORY_COLORS = CATEGORY_COLOR_PALETTE
 
 export function CategoriesClient({ categories: initial }: { categories: Category[] }) {
   const [categories, setCategories] = useState<Category[]>(initial)
@@ -29,20 +27,20 @@ export function CategoriesClient({ categories: initial }: { categories: Category
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
-    defaultValues: { name: '', color: '#000000', icon: '' },
+    defaultValues: { name: '', color: CATEGORY_COLOR_PALETTE[0], icon: '' },
   })
 
   const selectedColor = watch('color')
 
   function openEdit(cat: Category) {
     setEditing(cat)
-    reset({ name: cat.name, color: cat.color ?? '#000000', icon: cat.icon ?? '' })
+    reset({ name: cat.name, color: getCategoryColor(cat.name, cat.color), icon: cat.icon ?? '' })
     setShowForm(true)
   }
 
   function openNew() {
     setEditing(null)
-    reset({ name: '', color: '#000000', icon: '' })
+    reset({ name: '', color: CATEGORY_COLOR_PALETTE[0], icon: '' })
     setShowForm(true)
   }
 
@@ -130,22 +128,31 @@ export function CategoriesClient({ categories: initial }: { categories: Category
             <p className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Custom Categories</p>
           </div>
           <ul className="divide-y divide-[var(--color-border-secondary)]" role="list">
-            {userCategories.map((cat) => (
-              <li key={cat.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[var(--color-surface-hover)] transition-colors">
-                <div className="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center flex-shrink-0">
-                  <FolderOpen className="w-4 h-4 text-[var(--color-text-primary)]" />
-                </div>
-                <span className="flex-1 text-sm font-semibold text-[var(--color-text-primary)]">{cat.name}</span>
-                <div className="flex gap-1">
-                  <button onClick={() => openEdit(cat)} className="btn-ghost p-2" aria-label={`Edit ${cat.name}`}>
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setDeleteTarget(cat.id)} className="btn-ghost p-2 text-[var(--color-error-text)]" aria-label={`Delete ${cat.name}`}>
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
+            {userCategories.map((cat) => {
+              const color = getCategoryColor(cat.name, cat.color)
+              return (
+                <li key={cat.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[var(--color-surface-hover)] transition-colors">
+                  <div
+                    className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${color}15`,
+                      borderColor: `${color}35`,
+                    }}
+                  >
+                    <FolderOpen className="w-4 h-4" style={{ color }} />
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-[var(--color-text-primary)]">{cat.name}</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => openEdit(cat)} className="btn-ghost p-2" aria-label={`Edit ${cat.name}`}>
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setDeleteTarget(cat.id)} className="btn-ghost p-2 text-red-500" aria-label={`Delete ${cat.name}`}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
@@ -157,15 +164,24 @@ export function CategoriesClient({ categories: initial }: { categories: Category
           <Lock className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
         </div>
         <ul className="divide-y divide-[var(--color-border-secondary)]" role="list">
-          {systemCategories.map((cat) => (
-            <li key={cat.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[var(--color-surface-hover)] transition-colors">
-              <div className="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center flex-shrink-0">
-                <FolderOpen className="w-4 h-4 text-[var(--color-text-secondary)]" />
-              </div>
-              <span className="flex-1 text-sm text-[var(--color-text-primary)]">{cat.name}</span>
-              <Lock className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
-            </li>
-          ))}
+          {systemCategories.map((cat) => {
+            const color = getCategoryColor(cat.name, cat.color)
+            return (
+              <li key={cat.id} className="flex items-center gap-4 px-5 py-3 hover:bg-[var(--color-surface-hover)] transition-colors">
+                <div
+                  className="w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0"
+                  style={{
+                    backgroundColor: `${color}15`,
+                    borderColor: `${color}35`,
+                  }}
+                >
+                  <FolderOpen className="w-4 h-4" style={{ color }} />
+                </div>
+                <span className="flex-1 text-sm font-medium text-[var(--color-text-primary)]">{cat.name}</span>
+                <Lock className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
+              </li>
+            )
+          })}
         </ul>
       </div>
 
