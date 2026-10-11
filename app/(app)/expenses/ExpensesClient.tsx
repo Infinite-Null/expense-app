@@ -49,13 +49,23 @@ interface Filters {
   dateTo: string
 }
 
+import { useApp } from '@/components/providers/AppProvider'
+
 interface ExpensesClientProps {
-  categories: Pick<Category, 'id' | 'name' | 'color'>[]
-  tags: Pick<Tag, 'id' | 'name' | 'color'>[]
-  currency: string
+  categories?: Pick<Category, 'id' | 'name' | 'color'>[]
+  tags?: Pick<Tag, 'id' | 'name' | 'color'>[]
+  currency?: string
 }
 
-export function ExpensesClient({ categories, tags, currency }: ExpensesClientProps) {
+export function ExpensesClient({
+  categories: propCategories,
+  tags: propTags,
+  currency: propCurrency,
+}: ExpensesClientProps = {}) {
+  const app = useApp()
+  const categories = propCategories ?? app.categories
+  const tags = propTags ?? app.tags
+  const currency = propCurrency ?? app.currency
   const router = useRouter()
   const { success, error: toastError } = useToast()
 

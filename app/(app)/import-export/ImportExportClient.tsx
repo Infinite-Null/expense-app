@@ -21,10 +21,12 @@ import { Select } from '@/components/ui/FormFields'
 import type { Category, Tag } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 
+import { useApp } from '@/components/providers/AppProvider'
+
 interface ImportExportClientProps {
-  categories: Category[]
-  tags: Tag[]
-  defaultCurrency: string
+  categories?: Category[]
+  tags?: Tag[]
+  defaultCurrency?: string
 }
 
 type TabType = 'export' | 'import'
@@ -58,10 +60,14 @@ interface ParsedExpenseRow {
 }
 
 export function ImportExportClient({
-  categories,
-  tags,
-  defaultCurrency,
-}: ImportExportClientProps) {
+  categories: propCategories,
+  tags: propTags,
+  defaultCurrency: propCurrency,
+}: ImportExportClientProps = {}) {
+  const app = useApp()
+  const categories = propCategories ?? app.categories
+  const tags = propTags ?? app.tags
+  const defaultCurrency = propCurrency ?? app.currency
   const [activeTab, setActiveTab] = useState<TabType>('export')
   const { success, error: toastError, warning } = useToast()
 

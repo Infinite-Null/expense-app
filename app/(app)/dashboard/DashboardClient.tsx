@@ -24,9 +24,13 @@ import {
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { getCategoryColor } from '@/lib/utils/colors'
 
-interface DashboardClientProps {
-  displayName: string | null | undefined
-  currency: string
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useApp } from '@/components/providers/AppProvider'
+import { getCurrentMonthRange, getPreviousMonthRange } from '@/lib/utils/dates'
+import { percentageChange } from '@/lib/utils/currency'
+
+interface DashboardData {
   thisMonthTotal: number
   prevMonthTotal: number
   monthChange: number | null
@@ -44,6 +48,125 @@ interface DashboardClientProps {
     category: { name: string; color: string | null } | null
   }[]
   categoryBreakdown: { name: string; color: string | null; total: number }[]
+}
+
+let cachedDashboardData: DashboardData | null = null
+
+async function loadDashboardMetrics(userId: string, supabase: ReturnType<typeof createClient>): Promise<DashboardData> {
+  const { from: thisMonthFrom, to: thisMonthTo } = getCurrentMonthRange()
+  const { from: prevMonthFrom, to: prevMonthTo } = getPreviousMonthRange()
+
+  const [
+    { data: thisMonthExpenses },
+    { data: prevMonthExpenses },
+    { data: recentExpenses },
+    { data: largestExpense },
+    { data: categoryData },
+  ] = await Promise.all([
+    supabase
+      .from('expenses')
+      .select('amount, transaction_date, category_id')
+      .eq('user_id', userId)
+      .gte('transaction_date', thisMonthFrom)
+      .lte('transaction_date', thisMonthTo)
+      .order('transaction_date', { ascending: false }),
+    supabase
+      .from('expenses')
+      .select('amount')
+      .eq('user_id', userId)
+      .gte('transaction_date', prevMonthFrom)
+      .lte('transaction_date', prevMonthTo),
+    supabase
+      .from('expenses')
+      .select(`
+        id, title, amount, currency, transaction_date, merchant,
+        categories:category_id ( id, name, icon, color )
+      `)
+      .eq('user_id', userId)
+      .order('transaction_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase
+      .from('expenses')
+      .select('title, amount')
+      .eq('user_id', userId)
+      .order('amount', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('expenses')
+      .select(`
+        amount,
+        categories:category_id ( id, name, color )
+      `)
+      .eq('user_id', userId)
+      .gte('transaction_date', thisMonthFrom)
+      .lte('transaction_date', thisMonthTo),
+  ])
+
+  const thisMonthTotal = (thisMonthExpenses ?? []).reduce((s, e) => s + Number(e.amount), 0)
+  const prevMonthTotal = (prevMonthExpenses ?? []).reduce((s, e) => s + Number(e.amount), 0)
+  const monthChange = percentageChange(thisMonthTotal, prevMonthTotal)
+
+  const daysInMonth = new Date().getDate()
+  const avgDaily = daysInMonth > 0 ? Math.round((thisMonthTotal / daysInMonth) * 100) / 100 : 0
+
+  const categoryMap: Record<string, { name: string; color: string | null; total: number }> = {}
+  for (const expense of categoryData ?? []) {
+    const cat = expense.categories as { id: string; name: string; color: string | null } | null
+    const key = cat?.name ?? 'Uncategorized'
+    const color = cat?.color ?? '#B0BEC5'
+    if (!categoryMap[key]) categoryMap[key] = { name: key, color, total: 0 }
+    categoryMap[key].total += Number(expense.amount)
+  }
+
+  const categoryBreakdown = Object.values(categoryMap)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6)
+
+  const mostUsedCategory = categoryBreakdown[0]?.name ?? null
+
+  return {
+    thisMonthTotal,
+    prevMonthTotal,
+    monthChange,
+    avgDaily,
+    transactionCount: thisMonthExpenses?.length ?? 0,
+    largestExpense: largestExpense ? { title: largestExpense.title, amount: Number(largestExpense.amount) } : null,
+    mostUsedCategory,
+    recentExpenses: (recentExpenses ?? []).map((e: any) => ({
+      id: e.id,
+      title: e.title,
+      amount: Number(e.amount),
+      currency: e.currency,
+      transaction_date: e.transaction_date,
+      merchant: e.merchant,
+      category: e.categories as { name: string; color: string | null } | null,
+    })),
+    categoryBreakdown,
+  }
+}
+
+interface DashboardClientProps {
+  displayName?: string | null | undefined
+  currency?: string
+  thisMonthTotal?: number
+  prevMonthTotal?: number
+  monthChange?: number | null
+  avgDaily?: number
+  transactionCount?: number
+  largestExpense?: { title: string; amount: number } | null
+  mostUsedCategory?: string | null
+  recentExpenses?: {
+    id: string
+    title: string
+    amount: number
+    currency: string
+    transaction_date: string
+    merchant: string | null
+    category: { name: string; color: string | null } | null
+  }[]
+  categoryBreakdown?: { name: string; color: string | null; total: number }[]
 }
 
 function MetricTile({
@@ -75,19 +198,91 @@ function MetricTile({
 }
 
 export function DashboardClient({
-  displayName,
-  currency,
-  thisMonthTotal,
-  prevMonthTotal,
-  monthChange,
-  avgDaily,
-  transactionCount,
-  largestExpense,
-  mostUsedCategory,
-  recentExpenses,
-  categoryBreakdown,
-}: DashboardClientProps) {
+  displayName: propDisplayName,
+  currency: propCurrency,
+  thisMonthTotal: propThisMonthTotal,
+  prevMonthTotal: propPrevMonthTotal,
+  monthChange: propMonthChange,
+  avgDaily: propAvgDaily,
+  transactionCount: propTransactionCount,
+  largestExpense: propLargestExpense,
+  mostUsedCategory: propMostUsedCategory,
+  recentExpenses: propRecentExpenses,
+  categoryBreakdown: propCategoryBreakdown,
+}: Partial<DashboardClientProps> = {}) {
   const { resolvedTheme } = useTheme()
+  const { user, profile } = useApp()
+
+  const displayName = propDisplayName ?? profile?.display_name
+  const currency = propCurrency ?? profile?.preferred_currency ?? 'INR'
+
+  const [data, setData] = useState<DashboardData | null>(() => {
+    if (propThisMonthTotal !== undefined) {
+      return {
+        thisMonthTotal: propThisMonthTotal,
+        prevMonthTotal: propPrevMonthTotal ?? 0,
+        monthChange: propMonthChange ?? null,
+        avgDaily: propAvgDaily ?? 0,
+        transactionCount: propTransactionCount ?? 0,
+        largestExpense: propLargestExpense ?? null,
+        mostUsedCategory: propMostUsedCategory ?? null,
+        recentExpenses: propRecentExpenses ?? [],
+        categoryBreakdown: propCategoryBreakdown ?? [],
+      }
+    }
+    return cachedDashboardData
+  })
+
+  const [loading, setLoading] = useState(
+    propThisMonthTotal === undefined && !cachedDashboardData
+  )
+
+  const loadData = useCallback(async () => {
+    if (propThisMonthTotal !== undefined) return
+    const supabase = createClient()
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (!currentUser) return
+
+    const res = await loadDashboardMetrics(currentUser.id, supabase)
+    cachedDashboardData = res
+    setData(res)
+    setLoading(false)
+  }, [propThisMonthTotal])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  if (loading && !data) {
+    return (
+      <div className="flex flex-col gap-6 sm:gap-8 page-enter">
+        <div className="flex flex-col gap-2">
+          <div className="h-4 w-40 skeleton rounded-md" />
+          <div className="h-8 w-56 skeleton rounded-md mt-1" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="h-28 skeleton rounded-2xl" />
+          <div className="h-28 skeleton rounded-2xl" />
+          <div className="h-28 skeleton rounded-2xl" />
+          <div className="h-28 skeleton rounded-2xl" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="lg:col-span-2 h-72 skeleton rounded-2xl" />
+          <div className="h-72 skeleton rounded-2xl" />
+        </div>
+      </div>
+    )
+  }
+
+  const thisMonthTotal = data?.thisMonthTotal ?? 0
+  const prevMonthTotal = data?.prevMonthTotal ?? 0
+  const monthChange = data?.monthChange ?? null
+  const avgDaily = data?.avgDaily ?? 0
+  const transactionCount = data?.transactionCount ?? 0
+  const largestExpense = data?.largestExpense ?? null
+  const mostUsedCategory = data?.mostUsedCategory ?? null
+  const recentExpenses = data?.recentExpenses ?? []
+  const categoryBreakdown = data?.categoryBreakdown ?? []
 
   const now = new Date()
   const greeting =

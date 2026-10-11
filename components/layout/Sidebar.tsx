@@ -28,6 +28,8 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
+import { useApp } from '@/components/providers/AppProvider'
+
 interface SidebarProps {
   userEmail?: string | null
   displayName?: string | null
@@ -36,6 +38,7 @@ interface SidebarProps {
 export function Sidebar({ userEmail, displayName }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { user, profile } = useApp()
 
   async function handleLogout() {
     const supabase = createClient()
@@ -44,14 +47,17 @@ export function Sidebar({ userEmail, displayName }: SidebarProps) {
     router.refresh()
   }
 
-  const initials = displayName
-    ? displayName
+  const effectiveEmail = userEmail ?? user?.email
+  const effectiveDisplayName = displayName ?? profile?.display_name
+
+  const initials = effectiveDisplayName
+    ? effectiveDisplayName
         .split(' ')
         .map((n) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)
-    : userEmail?.[0]?.toUpperCase() ?? '?'
+    : effectiveEmail?.[0]?.toUpperCase() ?? '?'
 
   return (
     <aside
@@ -129,10 +135,10 @@ export function Sidebar({ userEmail, displayName }: SidebarProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
-              {displayName ?? 'Account'}
+              {effectiveDisplayName ?? 'Account'}
             </p>
             <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate">
-              {userEmail ?? ''}
+              {effectiveEmail ?? ''}
             </p>
           </div>
         </div>

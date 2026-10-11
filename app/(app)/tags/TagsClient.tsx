@@ -15,14 +15,24 @@ import { cn } from '@/lib/utils/cn'
 
 import { TAG_COLOR_PALETTE, getTagColor, getBadgeStyles } from '@/lib/utils/colors'
 
+import { useEffect } from 'react'
+import { useApp } from '@/components/providers/AppProvider'
+
 const TAG_COLORS = TAG_COLOR_PALETTE
 
 interface TagsClientProps {
-  tags: Tag[]
+  tags?: Tag[]
 }
 
-export function TagsClient({ tags: initial }: TagsClientProps) {
-  const [tags, setTags] = useState<Tag[]>(initial)
+export function TagsClient({ tags: initial }: TagsClientProps = {}) {
+  const app = useApp()
+  const [tags, setTags] = useState<Tag[]>(initial ?? app.tags)
+
+  useEffect(() => {
+    if (!initial && app.tags.length > 0) {
+      setTags(app.tags)
+    }
+  }, [initial, app.tags])
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Tag | null>(null)
@@ -96,6 +106,7 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
       success('Tag created successfully')
     }
 
+    app.refreshTags()
     setShowModal(false)
   }
 
@@ -119,6 +130,7 @@ export function TagsClient({ tags: initial }: TagsClientProps) {
 
     setTags((prev) => prev.filter((t) => t.id !== deleteTarget.id))
     setDeleteTarget(null)
+    app.refreshTags()
     success('Tag deleted')
   }
 

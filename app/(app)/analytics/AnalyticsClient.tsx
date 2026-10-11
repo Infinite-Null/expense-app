@@ -15,12 +15,15 @@ import { useTheme } from '@/components/providers/ThemeProvider'
 import type { Category, Tag } from '@/lib/types/database'
 import { getCategoryColor, getTagColor, getBadgeStyles } from '@/lib/utils/colors'
 
+import { useApp } from '@/components/providers/AppProvider'
+import { getCurrentMonthRange } from '@/lib/utils/dates'
+
 interface AnalyticsClientProps {
-  categories: Pick<Category, 'id' | 'name' | 'color'>[]
-  tags: Pick<Tag, 'id' | 'name' | 'color'>[]
-  currency: string
-  defaultFrom: string
-  defaultTo: string
+  categories?: Pick<Category, 'id' | 'name' | 'color'>[]
+  tags?: Pick<Tag, 'id' | 'name' | 'color'>[]
+  currency?: string
+  defaultFrom?: string
+  defaultTo?: string
 }
 
 const DATE_PRESETS = [
@@ -32,8 +35,21 @@ const DATE_PRESETS = [
 ]
 
 export function AnalyticsClient({
-  categories, tags, currency, defaultFrom, defaultTo
-}: AnalyticsClientProps) {
+  categories: propCategories,
+  tags: propTags,
+  currency: propCurrency,
+  defaultFrom: propDefaultFrom,
+  defaultTo: propDefaultTo,
+}: AnalyticsClientProps = {}) {
+  const app = useApp()
+  const { from: monthFrom, to: monthTo } = getCurrentMonthRange()
+
+  const categories = propCategories ?? app.categories
+  const tags = propTags ?? app.tags
+  const currency = propCurrency ?? app.currency
+  const defaultFrom = propDefaultFrom ?? monthFrom
+  const defaultTo = propDefaultTo ?? monthTo
+
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
 

@@ -27,9 +27,12 @@ import type { Profile } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
 
+import { useEffect } from 'react'
+import { useApp } from '@/components/providers/AppProvider'
+
 interface SettingsClientProps {
-  user: { id: string; email: string }
-  profile: Profile
+  user?: { id: string; email: string }
+  profile?: Profile
 }
 
 const CURRENCIES = [
@@ -52,12 +55,25 @@ const LOCALES = [
   { code: 'ja-JP', name: 'Japanese (Japan)' },
 ]
 
-export function SettingsClient({ user, profile: initialProfile }: SettingsClientProps) {
+export function SettingsClient({ user: propUser, profile: initialProfile }: SettingsClientProps = {}) {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { success, error: toastError } = useToast()
+  const app = useApp()
 
-  const [profile, setProfile] = useState<Profile>(initialProfile)
+  const user = propUser ?? (app.user ? { id: app.user.id, email: app.user.email ?? '' } : { id: '', email: '' })
+  const [profile, setProfile] = useState<Profile>(
+    initialProfile ??
+      app.profile ?? {
+        id: user.id,
+        display_name: 'User',
+        preferred_currency: 'INR',
+        preferred_locale: 'en-IN',
+        theme_preference: 'system',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+  )
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -67,6 +83,7 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -77,6 +94,18 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
       theme_preference: (profile.theme_preference as 'light' | 'dark' | 'system') ?? 'system',
     },
   })
+
+  useEffect(() => {
+    if (!initialProfile && app.profile) {
+      setProfile(app.profile)
+      reset({
+        display_name: app.profile.display_name ?? '',
+        preferred_currency: app.profile.preferred_currency ?? 'INR',
+        preferred_locale: app.profile.preferred_locale ?? 'en-IN',
+        theme_preference: (app.profile.theme_preference as 'light' | 'dark' | 'system') ?? 'system',
+      })
+    }
+  }, [initialProfile, app.profile, reset])
 
   const currentThemePref = watch('theme_preference')
 
@@ -104,8 +133,8 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
       updated_at: new Date().toISOString(),
     }))
 
+    app.refreshProfile()
     success('Preferences saved successfully')
-    router.refresh()
   }
 
   function handleThemeChange(newTheme: 'light' | 'dark' | 'system') {

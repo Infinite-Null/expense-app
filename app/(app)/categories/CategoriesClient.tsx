@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, FolderOpen, Lock } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,10 +15,19 @@ import { cn } from '@/lib/utils/cn'
 
 import { CATEGORY_COLOR_PALETTE, getCategoryColor } from '@/lib/utils/colors'
 
+import { useApp } from '@/components/providers/AppProvider'
+
 const CATEGORY_COLORS = CATEGORY_COLOR_PALETTE
 
-export function CategoriesClient({ categories: initial }: { categories: Category[] }) {
-  const [categories, setCategories] = useState<Category[]>(initial)
+export function CategoriesClient({ categories: initial }: { categories?: Category[] } = {}) {
+  const app = useApp()
+  const [categories, setCategories] = useState<Category[]>(initial ?? app.categories)
+
+  useEffect(() => {
+    if (!initial && app.categories.length > 0) {
+      setCategories(app.categories)
+    }
+  }, [initial, app.categories])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
@@ -79,6 +88,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
       success('Category created')
     }
 
+    app.refreshCategories()
     setShowForm(false)
   }
 
@@ -103,6 +113,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
 
     if (error) { toastError('Failed to delete category'); return }
     setCategories((prev) => prev.filter((c) => c.id !== deleteTarget))
+    app.refreshCategories()
     success('Category deleted')
   }
 
