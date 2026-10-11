@@ -170,6 +170,8 @@ export function MobileNav() {
         style={{
           paddingTop: 'max(env(safe-area-inset-top, 0px), 10px)',
           paddingBottom: '10px',
+          WebkitBackdropFilter: 'blur(2px) saturate(190%)',
+          backdropFilter: 'blur(2px) saturate(190%)',
         }}
       >
         <Link href="/dashboard" className="flex items-center gap-2">
