@@ -16,15 +16,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="w-full">
+      <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="form-label">
+          <label htmlFor={inputId} className="form-label mb-0">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] pointer-events-none">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -43,18 +43,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p id={`${inputId}-error`} className="form-error" role="alert">
+          <p id={`${inputId}-error`} className="form-error mt-0.5" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={`${inputId}-hint`} className="text-xs text-[var(--color-text-tertiary)] mt-1">
+          <p id={`${inputId}-hint`} className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
             {hint}
           </p>
         )}
@@ -76,9 +76,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="w-full">
+      <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="form-label">
+          <label htmlFor={inputId} className="form-label mb-0">
             {label}
           </label>
         )}
@@ -94,12 +94,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p className="form-error" role="alert">
+          <p className="form-error mt-0.5" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-1">{hint}</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
         )}
       </div>
     )
@@ -120,9 +120,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="w-full">
+      <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="form-label">
+          <label htmlFor={inputId} className="form-label mb-0">
             {label}
           </label>
         )}
@@ -145,12 +145,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {children}
         </select>
         {error && (
-          <p className="form-error" role="alert">
+          <p className="form-error mt-0.5" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-1">{hint}</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
         )}
       </div>
     )

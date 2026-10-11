@@ -201,7 +201,7 @@ export function ExpenseForm({
       />
 
       {/* Category + Date */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
         <div>
           <label htmlFor="expense-category" className="form-label">Category</label>
           <select id="expense-category" className="input-base" {...register('category_id')}>
@@ -221,7 +221,7 @@ export function ExpenseForm({
       </div>
 
       {/* Merchant + Payment method */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
         <Input
           label="Merchant / Payee"
           id="expense-merchant"
@@ -348,19 +348,19 @@ export function ExpenseForm({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-4 sm:pt-6">
         <Button
           type="button"
           variant="secondary"
           onClick={() => router.back()}
-          className="flex-1"
+          className="flex-1 h-11 text-sm font-medium"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           loading={isSubmitting}
-          className="flex-1"
+          className="flex-1 h-11 text-sm font-semibold"
           id="expense-submit"
         >
           {isEditing ? 'Update Expense' : 'Add Expense'}

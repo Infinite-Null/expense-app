@@ -220,16 +220,19 @@ export function AnalyticsClient({
       </div>
 
       {/* Date Range & Filter Bar */}
-      <div className="apple-card p-3 sm:p-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-        {/* Presets Segmented Control */}
-        <div className="segmented-control flex-wrap">
+      <div className="apple-card p-4 sm:p-5 space-y-4">
+        {/* Presets Row: Scrollable pill bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {DATE_PRESETS.map((p) => (
             <button
               key={p.key}
+              type="button"
               onClick={() => applyPreset(p.key)}
               className={cn(
-                'segmented-item',
-                activePreset === p.key && 'active'
+                'px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all select-none border',
+                activePreset === p.key
+                  ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
+                  : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)]'
               )}
             >
               {p.label}
@@ -237,32 +240,40 @@ export function AnalyticsClient({
           ))}
         </div>
 
-        {/* Date Inputs & Category Select */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setActivePreset('') }}
-            className="input-base text-xs py-1.5 px-2.5 w-auto"
-            aria-label="From date"
-          />
-          <span className="text-[var(--color-text-tertiary)] text-xs">to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setActivePreset('') }}
-            className="input-base text-xs py-1.5 px-2.5 w-auto"
-            aria-label="To date"
-          />
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="input-base text-xs py-1.5 px-2.5 w-auto"
-            aria-label="Filter by category"
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+        {/* Custom Range & Category Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[var(--color-border-secondary)]">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[var(--color-text-tertiary)] shrink-0 font-medium">Custom:</span>
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setActivePreset('') }}
+                className="input-base text-xs py-1.5 px-2.5 w-full sm:w-36"
+                aria-label="From date"
+              />
+              <span className="text-[var(--color-text-tertiary)]">→</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setActivePreset('') }}
+                className="input-base text-xs py-1.5 px-2.5 w-full sm:w-36"
+                aria-label="To date"
+              />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-48">
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="input-base text-xs py-1.5 px-2.5 w-full"
+              aria-label="Filter by category"
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 

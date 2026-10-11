@@ -55,13 +55,13 @@ export function Sidebar({ userEmail, displayName }: SidebarProps) {
 
   return (
     <aside
-      className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 overflow-y-auto glass-chrome"
+      className="hidden md:flex flex-col w-64 shrink-0 h-screen sticky top-0 overflow-y-auto glass-chrome"
       style={{
         borderRight: '0.5px solid var(--color-border-primary)',
       }}
     >
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-5 pt-6 pb-4">
+      <div className="flex items-center justify-between px-6 pt-7 pb-5">
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-sm transition-transform group-hover:scale-105">
             S
@@ -73,10 +73,10 @@ export function Sidebar({ userEmail, displayName }: SidebarProps) {
       </div>
 
       {/* Quick Add Button */}
-      <div className="px-3 mb-4">
+      <div className="px-4 mb-6">
         <Link
           href="/expenses/new"
-          className="btn-primary w-full justify-center text-xs py-2 h-9 rounded-[var(--radius-md)]"
+          className="btn-primary w-full justify-center text-xs py-2.5 h-10 rounded-[var(--radius-md)] shadow-xs"
           id="nav-quick-add"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -164,10 +164,16 @@ export function MobileNav() {
 
   return (
     <>
-      {/* Mobile Top Header */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-13 glass-chrome border-b border-[var(--color-border-primary)]">
+      {/* Mobile Top Header with iOS Safe Area */}
+      <header
+        className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 glass-chrome border-b border-[var(--color-border-primary)]"
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top, 0px), 10px)',
+          paddingBottom: '10px',
+        }}
+      >
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-xs">
+          <div className="w-6 h-6 rounded-md bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-xs">
             S
           </div>
           <span className="font-semibold text-sm tracking-tight text-[var(--color-text-primary)]">
@@ -176,7 +182,7 @@ export function MobileNav() {
         </Link>
         <Link
           href="/expenses/new"
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-medium active:scale-95 transition-transform"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-semibold active:scale-95 transition-transform shadow-xs"
           id="mobile-quick-add"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -186,10 +192,10 @@ export function MobileNav() {
 
       {/* Mobile Bottom Tab Bar */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around glass-chrome border-t border-[var(--color-border-primary)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around glass-chrome border-t border-[var(--color-border-primary)] shadow-lg"
         style={{
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 4px)',
-          paddingTop: '6px',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+          paddingTop: '8px',
         }}
         aria-label="Mobile Tab Navigation"
       >

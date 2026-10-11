@@ -150,32 +150,32 @@ export function DashboardClient({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 page-enter">
+    <div className="flex flex-col gap-6 sm:gap-8 page-enter">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex items-center gap-2 text-xs text-[var(--color-text-tertiary)] font-medium">
             <span>{greeting}, {firstName}</span>
             <span>·</span>
             <span>{monthName} {now.getFullYear()}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)] mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)] mt-1.5">
             Overview
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link
             href="/expenses/new"
-            className="btn-primary text-xs px-3.5 py-2"
+            className="btn-primary text-xs px-4 py-2.5 h-10 shadow-xs"
             id="dashboard-add-expense"
           >
-            <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
             <span>Add Expense</span>
           </Link>
           <Link
             href="/expenses"
-            className="btn-secondary text-xs px-3.5 py-2 hidden sm:inline-flex"
+            className="btn-secondary text-xs px-4 py-2.5 h-10 hidden sm:inline-flex"
           >
             <span>All Expenses</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -185,28 +185,28 @@ export function DashboardClient({
 
       {/* Main Spend Hero Card */}
       <div className="apple-card p-6 sm:p-8 relative overflow-hidden">
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold tracking-wider uppercase text-[var(--color-text-tertiary)]">
               Total Spending ({monthName})
             </span>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">
-              <Calendar className="w-3 h-3" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">
+              <Calendar className="w-3.5 h-3.5" />
               <span>Current Cycle</span>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4 pt-1">
             <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--color-text-primary)] tabular-nums">
               {formatCurrency(thisMonthTotal, currency)}
             </span>
 
             {monthChange !== null && (
-              <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border border-[var(--color-border-primary)] self-start sm:self-auto text-[var(--color-text-secondary)]">
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-[var(--color-border-primary)] self-start sm:self-auto text-[var(--color-text-secondary)]">
                 {isSpendingDown ? (
-                  <TrendingDown className="w-3 h-3" />
+                  <TrendingDown className="w-3.5 h-3.5" />
                 ) : (
-                  <TrendingUp className="w-3 h-3" />
+                  <TrendingUp className="w-3.5 h-3.5" />
                 )}
                 <span>{formatPercentage(monthChange)} vs prev month ({formatCurrencyCompact(prevMonthTotal, currency)})</span>
               </div>
@@ -216,7 +216,7 @@ export function DashboardClient({
       </div>
 
       {/* Secondary Metrics 4-Col Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
         <MetricTile
           label="Daily Average"
           value={formatCurrencyCompact(avgDaily, currency)}
@@ -240,9 +240,9 @@ export function DashboardClient({
       </div>
 
       {/* Breakdown and Transactions Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
         {/* Monochromatic Category Share */}
-        <div className="lg:col-span-2 apple-card p-5 sm:p-6 space-y-4">
+        <div className="lg:col-span-2 apple-card p-6 flex flex-col gap-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
               Category Share
@@ -311,7 +311,7 @@ export function DashboardClient({
         </div>
 
         {/* Recent Transactions List */}
-        <div className="lg:col-span-3 apple-card p-5 sm:p-6 space-y-4">
+        <div className="lg:col-span-3 apple-card p-6 flex flex-col gap-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
               Recent Transactions

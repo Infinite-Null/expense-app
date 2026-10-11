@@ -140,15 +140,15 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} title={title} description={description} size="sm">
-      <div className="flex gap-3 mt-4">
-        <button onClick={onClose} className="btn-secondary flex-1">
+      <div className="flex gap-3 mt-6 pt-1">
+        <button onClick={onClose} className="btn-secondary flex-1 h-10 text-sm font-medium">
           {cancelLabel}
         </button>
         <button
           onClick={onConfirm}
           disabled={loading}
           className={cn(
-            'flex-1',
+            'flex-1 h-10 text-sm font-semibold',
             variant === 'destructive' ? 'btn-destructive' : 'btn-primary'
           )}
         >

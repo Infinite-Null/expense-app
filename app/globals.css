@@ -107,6 +107,12 @@
   --color-nav-item-active-bg: #000000;
   --color-nav-item-active-text: #ffffff;
   --color-nav-item-hover-bg: rgba(0, 0, 0, 0.05);
+
+  /* Legacy & Semantic Aliases */
+  --color-fill-secondary: #f2f2f5;
+  --color-fill-tertiary: #e5e5ea;
+  --color-card: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.08);
 }
 
 /* ── DARK MODE: OLED PURE BLACK & TRANSLUCENT DEPTH ── */
@@ -179,6 +185,12 @@
   --color-nav-item-active-bg: #ffffff;
   --color-nav-item-active-text: #000000;
   --color-nav-item-hover-bg: rgba(255, 255, 255, 0.08);
+
+  /* Legacy & Semantic Aliases */
+  --color-fill-secondary: #1c1c1e;
+  --color-fill-tertiary: #2c2c2e;
+  --color-card: #121214;
+  --color-border: rgba(255, 255, 255, 0.1);
 }
 
 /* =====================================================
@@ -186,8 +198,6 @@
    ===================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
@@ -298,10 +308,18 @@ h3, .card-title {
 .apple-card, .card {
   background: var(--color-surface-primary);
   border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xs);
   transition: all var(--duration-fast) var(--ease-apple);
 }
+
+/* Bulletproof spacing utilities */
+.space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+.space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 2rem; }
 
 .apple-card-hover:hover {
   border-color: var(--color-border-hover);

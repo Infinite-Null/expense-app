@@ -203,30 +203,30 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {/* System */}
             <button
               type="button"
               onClick={() => handleThemeChange('system')}
               className={cn(
-                'p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between h-32',
+                'p-3 sm:p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[5.5rem] sm:min-h-[6.5rem]',
                 currentThemePref === 'system'
-                  ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 bg-[var(--color-fill-secondary)]'
-                  : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-card)]'
+                  ? 'border-black dark:border-white ring-2 ring-black/10 dark:ring-white/20 bg-[var(--color-surface-secondary)]'
+                  : 'border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)] bg-[var(--color-surface-primary)]'
               )}
             >
-              <div className="flex items-center justify-between">
-                <Laptop className="w-5 h-5 text-[var(--color-text-primary)]" />
+              <div className="flex items-center justify-between w-full">
+                <Laptop className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-text-primary)]" />
                 {currentThemePref === 'system' && (
-                  <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-text-primary)]" strokeWidth={2.5} />
                 )}
               </div>
               <div>
-                <span className="text-sm font-semibold text-[var(--color-text-primary)] block">
+                <span className="text-xs sm:text-sm font-semibold text-[var(--color-text-primary)] block">
                   System
                 </span>
-                <span className="text-xs text-[var(--color-text-tertiary)]">
-                  Match device OS setting
+                <span className="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] hidden sm:block">
+                  Match device OS
                 </span>
               </div>
             </button>
@@ -236,24 +236,24 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
               type="button"
               onClick={() => handleThemeChange('light')}
               className={cn(
-                'p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between h-32',
+                'p-3 sm:p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[5.5rem] sm:min-h-[6.5rem]',
                 currentThemePref === 'light'
-                  ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 bg-[var(--color-fill-secondary)]'
-                  : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-card)]'
+                  ? 'border-black dark:border-white ring-2 ring-black/10 dark:ring-white/20 bg-[var(--color-surface-secondary)]'
+                  : 'border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)] bg-[var(--color-surface-primary)]'
               )}
             >
-              <div className="flex items-center justify-between">
-                <Sun className="w-5 h-5 text-[var(--color-text-primary)]" />
+              <div className="flex items-center justify-between w-full">
+                <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-text-primary)]" />
                 {currentThemePref === 'light' && (
-                  <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-text-primary)]" strokeWidth={2.5} />
                 )}
               </div>
               <div>
-                <span className="text-sm font-semibold text-[var(--color-text-primary)] block">
+                <span className="text-xs sm:text-sm font-semibold text-[var(--color-text-primary)] block">
                   Light
                 </span>
-                <span className="text-xs text-[var(--color-text-tertiary)]">
-                  Clean crisp light background
+                <span className="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] hidden sm:block">
+                  Clean crisp theme
                 </span>
               </div>
             </button>
@@ -263,24 +263,24 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
               type="button"
               onClick={() => handleThemeChange('dark')}
               className={cn(
-                'p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between h-32',
+                'p-3 sm:p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[5.5rem] sm:min-h-[6.5rem]',
                 currentThemePref === 'dark'
-                  ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 bg-[var(--color-fill-secondary)]'
-                  : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-card)]'
+                  ? 'border-black dark:border-white ring-2 ring-black/10 dark:ring-white/20 bg-[var(--color-surface-secondary)]'
+                  : 'border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)] bg-[var(--color-surface-primary)]'
               )}
             >
-              <div className="flex items-center justify-between">
-                <Moon className="w-5 h-5 text-[var(--color-text-primary)]" />
+              <div className="flex items-center justify-between w-full">
+                <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-text-primary)]" />
                 {currentThemePref === 'dark' && (
-                  <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-text-primary)]" strokeWidth={2.5} />
                 )}
               </div>
               <div>
-                <span className="text-sm font-semibold text-[var(--color-text-primary)] block">
+                <span className="text-xs sm:text-sm font-semibold text-[var(--color-text-primary)] block">
                   Dark
                 </span>
-                <span className="text-xs text-[var(--color-text-tertiary)]">
-                  Refined low-light palette
+                <span className="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] hidden sm:block">
+                  Refined dark theme
                 </span>
               </div>
             </button>
@@ -334,8 +334,13 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
         </div>
 
         {/* Save button */}
-        <div className="flex justify-end gap-4">
-          <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
+        <div className="flex justify-end pt-2">
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            disabled={!isDirty}
+            className="w-full sm:w-auto h-11 px-6 text-sm font-semibold"
+          >
             Save Preferences
           </Button>
         </div>
