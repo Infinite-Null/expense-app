@@ -299,15 +299,13 @@ h3, .card-title {
    ===================================================== */
 .glass-chrome {
   background: var(--color-nav-bg);
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(2px) saturate(190%) !important;
   border-top: 0.5px solid rgba(255, 255, 255, 0.3);
 }
 
 .dark .glass-chrome {
   border-top: 0.5px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px);
 }
 
 /* Apple Glassmorphic Card */

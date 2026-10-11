@@ -196,6 +196,8 @@ export function MobileNav() {
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
           paddingTop: '8px',
+          WebkitBackdropFilter: 'blur(2px) saturate(190%)',
+          backdropFilter: 'blur(2px) saturate(190%)',
         }}
         aria-label="Mobile Tab Navigation"
       >
