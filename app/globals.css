@@ -55,9 +55,9 @@
   --color-bg-elevated: #ffffff;
   --color-bg-overlay: rgba(0, 0, 0, 0.35);
 
-  --color-surface-primary: #ffffff;
-  --color-surface-secondary: #f2f2f5;
-  --color-surface-tertiary: #e5e5ea;
+  --color-surface-primary: rgba(255, 255, 255, 0.78);
+  --color-surface-secondary: rgba(242, 242, 247, 0.72);
+  --color-surface-tertiary: rgba(229, 229, 234, 0.65);
   --color-surface-hover: rgba(0, 0, 0, 0.04);
   --color-surface-pressed: rgba(0, 0, 0, 0.08);
 
@@ -133,9 +133,9 @@
   --color-bg-elevated: #18181a;
   --color-bg-overlay: rgba(0, 0, 0, 0.75);
 
-  --color-surface-primary: #121214;
-  --color-surface-secondary: #1c1c1e;
-  --color-surface-tertiary: #2c2c2e;
+  --color-surface-primary: rgba(18, 18, 20, 0.72);
+  --color-surface-secondary: rgba(28, 28, 30, 0.72);
+  --color-surface-tertiary: rgba(44, 44, 46, 0.65);
   --color-surface-hover: rgba(255, 255, 255, 0.06);
   --color-surface-pressed: rgba(255, 255, 255, 0.12);
 
@@ -213,12 +213,21 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg-primary);
+  background-image:
+    radial-gradient(at 100% 0%, rgba(0, 0, 0, 0.02) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(0, 0, 0, 0.015) 0px, transparent 50%);
   color: var(--color-text-primary);
   min-height: 100dvh;
   letter-spacing: -0.008em;
   line-height: 1.47059;
   transition: background-color var(--duration-base) var(--ease-apple),
               color var(--duration-base) var(--ease-apple);
+}
+
+.dark body {
+  background-image:
+    radial-gradient(at 100% 0%, rgba(255, 255, 255, 0.025) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 255, 255, 0.015) 0px, transparent 50%);
 }
 
 /* Numbers: Apple Tabular Numerics for Financial Clarity */
@@ -297,22 +306,20 @@ h3, .card-title {
   border-top: 0.5px solid rgba(255, 255, 255, 0.12);
 }
 
-.glass-card {
+/* Apple Glassmorphic Card */
+.apple-card, .card, .glass-card {
   background: var(--color-surface-primary);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--duration-fast) var(--ease-apple),
-              box-shadow var(--duration-fast) var(--ease-apple);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  transition: all var(--duration-fast) var(--ease-apple);
 }
 
-/* Standard Apple Card */
-.apple-card, .card {
-  background: var(--color-surface-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xs);
-  transition: all var(--duration-fast) var(--ease-apple);
+.dark .apple-card, .dark .card, .dark .glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Bulletproof spacing utilities */
@@ -400,6 +407,8 @@ h3, .card-title {
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
   background: var(--color-surface-secondary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md);
@@ -490,6 +499,8 @@ h3, .card-title {
   width: 100%;
   padding: 0.625rem 0.875rem;
   background: var(--color-surface-primary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);

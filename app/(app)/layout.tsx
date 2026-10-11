@@ -24,7 +24,7 @@ export default async function AppLayout({
     .single()
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+    <div className="flex flex-col md:flex-row min-h-screen">
       <Sidebar
         userEmail={user.email}
         displayName={profile?.display_name}

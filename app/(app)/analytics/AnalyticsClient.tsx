@@ -194,12 +194,14 @@ export function AnalyticsClient({
 
   const ChartTooltipContent = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null
+    const first = payload[0]
+    const headerTitle = label || first?.name || first?.payload?.name
     return (
       <div className="px-3 py-2 rounded-[var(--radius-md)] text-xs shadow-md border"
         style={{ background: 'var(--color-surface-primary)', borderColor: 'var(--color-border-primary)', color: 'var(--color-text-primary)' }}>
-        <p className="font-semibold mb-1">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.name} className="tabular-nums text-[var(--color-text-secondary)]">
+        {headerTitle && <p className="font-semibold mb-1">{headerTitle}</p>}
+        {payload.map((p: any, i: number) => (
+          <p key={i} className="tabular-nums text-[var(--color-text-secondary)]">
             {formatCurrency(p.value, currency)}
           </p>
         ))}
@@ -322,6 +324,108 @@ export function AnalyticsClient({
         </div>
       </div>
 
+      {/* Category Spending Analysis — Featured Pie Chart */}
+      <div className="apple-card p-5 sm:p-7 space-y-5 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[var(--color-border-secondary)] pb-4">
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[var(--color-text-primary)]">
+              Category Spending Analysis
+            </h2>
+            <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+              Proportional distribution of expenses across categories
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)] shrink-0">
+              {categoryData.length} {categoryData.length === 1 ? 'Category' : 'Categories'}
+            </span>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="skeleton h-56 rounded-[var(--radius-md)]" />
+        ) : categoryData.length === 0 ? (
+          <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">
+            No categorical spending records found for this timeframe
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Pie Chart Canvas */}
+            <div className="md:col-span-5 flex flex-col items-center justify-center">
+              <div className="h-52 sm:h-56 w-full max-w-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="total"
+                      nameKey="name"
+                      stroke="none"
+                    >
+                      {categoryData.map((entry, i) => (
+                        <Cell key={entry.name} fill={monoPalette[i % monoPalette.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-center mt-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                  Top Category
+                </span>
+                <p className="text-xs font-bold text-[var(--color-text-primary)] mt-0.5 truncate max-w-[220px]">
+                  {categoryData[0]?.name} ({totalSpend > 0 ? ((categoryData[0]?.total / totalSpend) * 100).toFixed(1) : 0}%)
+                </p>
+              </div>
+            </div>
+
+            {/* Category Breakdown List */}
+            <div className="md:col-span-7 space-y-2.5 max-h-72 overflow-y-auto pr-1">
+              {categoryData.map((cat, i) => {
+                const pct = totalSpend > 0 ? (cat.total / totalSpend) * 100 : 0
+                return (
+                  <div key={cat.name} className="space-y-1.5 p-2 rounded-[var(--radius-sm)] transition-colors hover:bg-[var(--color-surface-hover)]">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ background: monoPalette[i % monoPalette.length] }}
+                        />
+                        <span className="font-semibold text-[var(--color-text-primary)] truncate">
+                          {cat.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 tabular-nums ml-2">
+                        <span className="text-[11px] font-medium text-[var(--color-text-tertiary)]">
+                          {pct.toFixed(1)}%
+                        </span>
+                        <span className="font-bold text-[var(--color-text-primary)]">
+                          {formatCurrency(cat.total, currency)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${pct}%`,
+                          background: monoPalette[i % monoPalette.length],
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Spending Over Time — Monochromatic Area Curve */}
       <div className="apple-card p-5 sm:p-6 space-y-4 overflow-hidden">
         <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
@@ -359,59 +463,8 @@ export function AnalyticsClient({
         )}
       </div>
 
-      {/* Category + Weekday breakdown */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Category breakdown */}
-        <div className="apple-card p-5 sm:p-6 space-y-4">
-          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
-            Distribution by Category
-          </h2>
-          {loading ? (
-            <div className="skeleton h-48 rounded-[var(--radius-md)]" />
-          ) : categoryData.length === 0 ? (
-            <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">No records found</p>
-          ) : (
-            <>
-              <div className="h-44 w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={45} outerRadius={68}
-                      paddingAngle={3} dataKey="total" stroke="none">
-                      {categoryData.map((entry, i) => (
-                        <Cell key={entry.name} fill={monoPalette[i % monoPalette.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="space-y-2 border-t border-[var(--color-border-secondary)] pt-3">
-                {categoryData.slice(0, 5).map((cat, i) => (
-                  <div key={cat.name} className="flex items-center gap-2.5">
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ background: monoPalette[i % monoPalette.length] }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-[var(--color-text-secondary)] truncate">{cat.name}</span>
-                        <span className="font-bold text-[var(--color-text-primary)] tabular-nums ml-2 flex-shrink-0">
-                          {formatCurrencyCompact(cat.total, currency)}
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
-                        <div className="h-full rounded-full bg-black dark:bg-white" style={{
-                          width: `${totalSpend > 0 ? (cat.total / totalSpend) * 100 : 0}%`,
-                          opacity: 0.9 - (i * 0.15)
-                        }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
+      {/* Weekday Distribution & Tag Analytics */}
+      <div className={tagData.length > 0 ? "grid md:grid-cols-2 gap-6" : "space-y-6"}>
         {/* Weekday spending — Monochromatic Bar Chart */}
         <div className="apple-card p-5 sm:p-6 space-y-4 overflow-hidden">
           <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
@@ -442,41 +495,41 @@ export function AnalyticsClient({
             </div>
           )}
         </div>
-      </div>
 
-      {/* Tag analytics */}
-      {tagData.length > 0 && (
-        <div className="apple-card p-5 sm:p-6 space-y-4">
-          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
-            Tag Grouping
-          </h2>
-          <div className="space-y-3">
-            {tagData.map((tag) => (
-              <div key={tag.name} className="flex items-center gap-3">
-                <span className="badge text-[0.6875rem] px-2.5 py-1 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)] shrink-0 font-medium">
-                  #{tag.name}
-                </span>
-                <div className="flex-1">
-                  <div className="h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
-                    <div className="h-full rounded-full bg-black dark:bg-white" style={{
-                      width: `${totalSpend > 0 ? (tag.total / totalSpend) * 100 : 0}%`,
-                    }} />
+        {/* Tag analytics */}
+        {tagData.length > 0 && (
+          <div className="apple-card p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+              Tag Grouping
+            </h2>
+            <div className="space-y-3">
+              {tagData.map((tag) => (
+                <div key={tag.name} className="flex items-center gap-3">
+                  <span className="badge text-[0.6875rem] px-2.5 py-1 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)] shrink-0 font-medium">
+                    #{tag.name}
+                  </span>
+                  <div className="flex-1">
+                    <div className="h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
+                      <div className="h-full rounded-full bg-black dark:bg-white" style={{
+                        width: `${totalSpend > 0 ? (tag.total / totalSpend) * 100 : 0}%`,
+                      }} />
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs font-bold text-[var(--color-text-primary)] tabular-nums">
+                      {formatCurrency(tag.total, currency)}
+                    </p>
+                    <p className="text-[0.625rem] text-[var(--color-text-tertiary)]">{tag.count} transactions</p>
                   </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-xs font-bold text-[var(--color-text-primary)] tabular-nums">
-                    {formatCurrency(tag.total, currency)}
-                  </p>
-                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)]">{tag.count} transactions</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pt-1 italic">
+              Multi-tag associations may overlap across shared transactions.
+            </p>
           </div>
-          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pt-1 italic">
-            Multi-tag associations may overlap across shared transactions.
-          </p>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Insights */}
       {!loading && insights.length > 0 && (

@@ -393,7 +393,7 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
               setDeleteConfirmationText('')
               setDeleteModalOpen(true)
             }}
-            className="px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-error)] text-white hover:opacity-90 transition-opacity"
+            className="px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-error)] text-white dark:text-black hover:opacity-90 transition-opacity"
             id="btn-delete-account"
           >
             Delete Account
