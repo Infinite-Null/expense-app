@@ -1,0 +1,479 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts'
+import { createClient } from '@/lib/supabase/client'
+import { formatCurrency, formatCurrencyCompact, percentageChange, formatPercentage } from '@/lib/utils/currency'
+import { formatShortDate, formatMonthYear, getPreviousPeriod, getDateRangePresets } from '@/lib/utils/dates'
+import { format, parseISO, eachDayOfInterval, eachMonthOfInterval } from 'date-fns'
+import { TrendingDown, TrendingUp, Lightbulb, BarChart3, Calendar } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
+import { useTheme } from '@/components/providers/ThemeProvider'
+import type { Category, Tag } from '@/lib/types/database'
+
+interface AnalyticsClientProps {
+  categories: Pick<Category, 'id' | 'name' | 'color'>[]
+  tags: Pick<Tag, 'id' | 'name' | 'color'>[]
+  currency: string
+  defaultFrom: string
+  defaultTo: string
+}
+
+const MONO_LIGHT = ['#000000', '#2c2c2e', '#48484a', '#636366', '#8e8e93', '#aeaeb2', '#c7c7cc', '#d1d1d6']
+const MONO_DARK = ['#ffffff', '#e5e5ea', '#d1d1d6', '#aeaeb2', '#8e8e93', '#636366', '#48484a', '#2c2c2e']
+
+const DATE_PRESETS = [
+  { key: 'this_month', label: 'This Month' },
+  { key: 'last_month', label: 'Last Month' },
+  { key: 'last_3_months', label: '3 Months' },
+  { key: 'last_6_months', label: '6 Months' },
+  { key: 'this_year', label: 'This Year' },
+]
+
+export function AnalyticsClient({
+  categories, tags, currency, defaultFrom, defaultTo
+}: AnalyticsClientProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  const monoPalette = isDark ? MONO_DARK : MONO_LIGHT
+
+  const [dateFrom, setDateFrom] = useState(defaultFrom)
+  const [dateTo, setDateTo] = useState(defaultTo)
+  const [activePreset, setActivePreset] = useState('this_month')
+  const [filterCategory, setFilterCategory] = useState('')
+
+  const [expenses, setExpenses] = useState<any[]>([])
+  const [prevExpenses, setPrevExpenses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const presets = getDateRangePresets()
+
+  function applyPreset(key: string) {
+    setActivePreset(key)
+    const p = presets[key]
+    if (p) {
+      setDateFrom(format(p.from, 'yyyy-MM-dd'))
+      setDateTo(format(p.to, 'yyyy-MM-dd'))
+    }
+  }
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    const supabase = createClient()
+
+    const fromDate = parseISO(dateFrom)
+    const toDate = parseISO(dateTo)
+    const prev = getPreviousPeriod(fromDate, toDate)
+
+    let query = supabase
+      .from('expenses')
+      .select(`
+        id, amount, transaction_date, category_id,
+        categories:category_id ( id, name, color ),
+        expense_tags ( tags ( id, name, color ) )
+      `)
+      .gte('transaction_date', dateFrom)
+      .lte('transaction_date', dateTo)
+      .order('transaction_date')
+
+    if (filterCategory) query = query.eq('category_id', filterCategory)
+
+    const { data: curr } = await query
+
+    // Previous period
+    const { data: prevData } = await supabase
+      .from('expenses')
+      .select('amount, transaction_date, category_id')
+      .gte('transaction_date', format(prev.from, 'yyyy-MM-dd'))
+      .lte('transaction_date', format(prev.to, 'yyyy-MM-dd'))
+
+    setExpenses((curr ?? []).map((e: any) => ({
+      ...e,
+      category: e.categories,
+      tags: (e.expense_tags ?? []).map((et: any) => et.tags).filter(Boolean),
+    })))
+    setPrevExpenses(prevData ?? [])
+    setLoading(false)
+  }, [dateFrom, dateTo, filterCategory])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // Computed analytics
+  const totalSpend = expenses.reduce((s, e) => s + Number(e.amount), 0)
+  const prevTotal = prevExpenses.reduce((s, e) => s + Number(e.amount), 0)
+  const change = percentageChange(totalSpend, prevTotal)
+
+  const avgTransaction = expenses.length > 0 ? totalSpend / expenses.length : 0
+  const maxExpense = expenses.reduce((m, e) => Math.max(m, Number(e.amount)), 0)
+
+  // Spending over time
+  const fromDate = parseISO(dateFrom)
+  const toDate = parseISO(dateTo)
+  const daysDiff = Math.ceil((toDate.getTime() - fromDate.getTime()) / 86400000)
+  const useMonthly = daysDiff > 60
+
+  let timeData: { label: string; amount: number }[] = []
+  if (useMonthly) {
+    const months = eachMonthOfInterval({ start: fromDate, end: toDate })
+    timeData = months.map((m) => {
+      const monthStr = format(m, 'yyyy-MM')
+      const total = expenses
+        .filter((e) => e.transaction_date.startsWith(monthStr))
+        .reduce((s, e) => s + Number(e.amount), 0)
+      return { label: format(m, 'MMM yy'), amount: Math.round(total * 100) / 100 }
+    })
+  } else {
+    const days = eachDayOfInterval({ start: fromDate, end: toDate })
+    timeData = days.map((d) => {
+      const dayStr = format(d, 'yyyy-MM-dd')
+      const total = expenses
+        .filter((e) => e.transaction_date === dayStr)
+        .reduce((s, e) => s + Number(e.amount), 0)
+      return { label: format(d, 'dd MMM'), amount: Math.round(total * 100) / 100 }
+    }).filter((d) => d.amount > 0 || daysDiff <= 14)
+  }
+
+  // Category breakdown
+  const categoryMap: Record<string, { name: string; color: string; total: number }> = {}
+  for (const e of expenses) {
+    const key = e.category?.id ?? 'uncategorized'
+    if (!categoryMap[key]) {
+      categoryMap[key] = {
+        name: e.category?.name ?? 'Uncategorized',
+        color: '',
+        total: 0,
+      }
+    }
+    categoryMap[key].total += Number(e.amount)
+  }
+  const categoryData = Object.values(categoryMap).sort((a, b) => b.total - a.total)
+
+  // Tag breakdown
+  const tagMap: Record<string, { name: string; color: string; total: number; count: number }> = {}
+  for (const e of expenses) {
+    for (const tag of e.tags ?? []) {
+      if (!tagMap[tag.id]) {
+        tagMap[tag.id] = { name: tag.name, color: tag.color, total: 0, count: 0 }
+      }
+      tagMap[tag.id].total += Number(e.amount)
+      tagMap[tag.id].count++
+    }
+  }
+  const tagData = Object.values(tagMap).sort((a, b) => b.total - a.total)
+
+  // Weekday spending
+  const weekdayTotals = Array(7).fill(0)
+  const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  for (const e of expenses) {
+    const day = parseISO(e.transaction_date).getDay()
+    weekdayTotals[day] += Number(e.amount)
+  }
+  const weekdayData = weekdayLabels.map((label, i) => ({
+    label,
+    amount: Math.round(weekdayTotals[i] * 100) / 100,
+  }))
+  const peakWeekday = weekdayData.reduce((m, d) => d.amount > m.amount ? d : m, weekdayData[0])
+
+  // Insights
+  const insights: string[] = []
+  if (change !== null) {
+    const dir = change > 0 ? 'increased' : 'decreased'
+    insights.push(`Spending ${dir} by ${Math.abs(change).toFixed(1)}% compared to the prior timeframe.`)
+  }
+  if (categoryData.length > 0) {
+    const top = categoryData[0]
+    const pct = totalSpend > 0 ? ((top.total / totalSpend) * 100).toFixed(1) : 0
+    insights.push(`${top.name} represented the largest share (${pct}% of total spending).`)
+  }
+  if (peakWeekday && peakWeekday.amount > 0) {
+    insights.push(`Historical expenditure peaks on ${peakWeekday.label}days.`)
+  }
+
+  const ChartTooltipContent = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div className="px-3 py-2 rounded-[var(--radius-md)] text-xs shadow-md border"
+        style={{ background: 'var(--color-surface-primary)', borderColor: 'var(--color-border-primary)', color: 'var(--color-text-primary)' }}>
+        <p className="font-semibold mb-1">{label}</p>
+        {payload.map((p: any) => (
+          <p key={p.name} className="tabular-nums text-[var(--color-text-secondary)]">
+            {formatCurrency(p.value, currency)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6 sm:space-y-8 page-enter">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
+          Analytics
+        </h1>
+        <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+          Deep financial metrics and patterns
+        </p>
+      </div>
+
+      {/* Date Range & Filter Bar */}
+      <div className="apple-card p-3 sm:p-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        {/* Presets Segmented Control */}
+        <div className="segmented-control flex-wrap">
+          {DATE_PRESETS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => applyPreset(p.key)}
+              className={cn(
+                'segmented-item',
+                activePreset === p.key && 'active'
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Date Inputs & Category Select */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setActivePreset('') }}
+            className="input-base text-xs py-1.5 px-2.5 w-auto"
+            aria-label="From date"
+          />
+          <span className="text-[var(--color-text-tertiary)] text-xs">to</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setActivePreset('') }}
+            className="input-base text-xs py-1.5 px-2.5 w-auto"
+            aria-label="To date"
+          />
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="input-base text-xs py-1.5 px-2.5 w-auto"
+            aria-label="Filter by category"
+          >
+            <option value="">All Categories</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="apple-card p-4 sm:p-5 col-span-2">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)]">Total Volume</p>
+          <p className="text-3xl font-extrabold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
+            {loading ? '—' : formatCurrency(totalSpend, currency)}
+          </p>
+          {change !== null && (
+            <div className="inline-flex items-center gap-1 text-xs font-medium mt-1 text-[var(--color-text-secondary)]">
+              {change < 0 ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+              <span>{formatPercentage(change)} vs previous period</span>
+            </div>
+          )}
+          {change === null && !loading && (
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-1">No comparative baseline</p>
+          )}
+        </div>
+
+        <div className="apple-card p-4 sm:p-5">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)]">Avg Ticket</p>
+          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
+            {loading ? '—' : formatCurrencyCompact(avgTransaction, currency)}
+          </p>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">{expenses.length} records</p>
+        </div>
+
+        <div className="apple-card p-4 sm:p-5">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)]">Max Outlay</p>
+          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
+            {loading ? '—' : formatCurrencyCompact(maxExpense, currency)}
+          </p>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">Single transaction</p>
+        </div>
+      </div>
+
+      {/* Spending Over Time — Monochromatic Area Curve */}
+      <div className="apple-card p-5 sm:p-6 space-y-4">
+        <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+          Expenditure Velocity
+        </h2>
+        {loading ? (
+          <div className="skeleton h-48 rounded-[var(--radius-md)]" />
+        ) : timeData.length === 0 ? (
+          <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">No data recorded for this timeframe</p>
+        ) : (
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={timeData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="monoCurve" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={isDark ? '#ffffff' : '#000000'} stopOpacity={isDark ? 0.35 : 0.2} />
+                    <stop offset="95%" stopColor={isDark ? '#ffffff' : '#000000'} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-secondary)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false}
+                  tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={60} />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Area type="monotone" dataKey="amount" name="Spent"
+                  stroke={isDark ? '#ffffff' : '#000000'}
+                  strokeWidth={2}
+                  fill="url(#monoCurve)"
+                  dot={false}
+                  activeDot={{ r: 4, fill: isDark ? '#ffffff' : '#000000' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Category + Weekday breakdown */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Category breakdown */}
+        <div className="apple-card p-5 sm:p-6 space-y-4">
+          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+            Distribution by Category
+          </h2>
+          {loading ? (
+            <div className="skeleton h-48 rounded-[var(--radius-md)]" />
+          ) : categoryData.length === 0 ? (
+            <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">No records found</p>
+          ) : (
+            <>
+              <div className="h-44 w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={45} outerRadius={68}
+                      paddingAngle={3} dataKey="total" stroke="none">
+                      {categoryData.map((entry, i) => (
+                        <Cell key={entry.name} fill={monoPalette[i % monoPalette.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="space-y-2 border-t border-[var(--color-border-secondary)] pt-3">
+                {categoryData.slice(0, 5).map((cat, i) => (
+                  <div key={cat.name} className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ background: monoPalette[i % monoPalette.length] }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-[var(--color-text-secondary)] truncate">{cat.name}</span>
+                        <span className="font-bold text-[var(--color-text-primary)] tabular-nums ml-2 flex-shrink-0">
+                          {formatCurrencyCompact(cat.total, currency)}
+                        </span>
+                      </div>
+                      <div className="h-1 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
+                        <div className="h-full rounded-full bg-black dark:bg-white" style={{
+                          width: `${totalSpend > 0 ? (cat.total / totalSpend) * 100 : 0}%`,
+                          opacity: 0.9 - (i * 0.15)
+                        }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Weekday spending — Monochromatic Bar Chart */}
+        <div className="apple-card p-5 sm:p-6 space-y-4">
+          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+            Distribution by Weekday
+          </h2>
+          {loading ? (
+            <div className="skeleton h-48 rounded-[var(--radius-md)]" />
+          ) : (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weekdayData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-secondary)" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false}
+                    tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={55} />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="amount" name="Spent" fill={isDark ? '#ffffff' : '#000000'} radius={[4, 4, 0, 0]} maxBarSize={32}>
+                    {weekdayData.map((entry) => (
+                      <Cell
+                        key={entry.label}
+                        fill={isDark ? '#ffffff' : '#000000'}
+                        opacity={entry.label === peakWeekday?.label ? 1 : 0.35}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tag analytics */}
+      {tagData.length > 0 && (
+        <div className="apple-card p-5 sm:p-6 space-y-4">
+          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+            Tag Grouping
+          </h2>
+          <div className="space-y-3">
+            {tagData.map((tag) => (
+              <div key={tag.name} className="flex items-center gap-3">
+                <span className="badge text-[0.6875rem] px-2.5 py-1 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)] shrink-0 font-medium">
+                  #{tag.name}
+                </span>
+                <div className="flex-1">
+                  <div className="h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden">
+                    <div className="h-full rounded-full bg-black dark:bg-white" style={{
+                      width: `${totalSpend > 0 ? (tag.total / totalSpend) * 100 : 0}%`,
+                    }} />
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-xs font-bold text-[var(--color-text-primary)] tabular-nums">
+                    {formatCurrency(tag.total, currency)}
+                  </p>
+                  <p className="text-[0.625rem] text-[var(--color-text-tertiary)]">{tag.count} transactions</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] pt-1 italic">
+            Multi-tag associations may overlap across shared transactions.
+          </p>
+        </div>
+      )}
+
+      {/* Insights */}
+      {!loading && insights.length > 0 && (
+        <div className="apple-card p-5 sm:p-6 space-y-3">
+          <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)] flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 text-[var(--color-text-primary)]" />
+            <span>Automated Insights</span>
+          </h2>
+          <ul className="space-y-2 text-xs text-[var(--color-text-secondary)]">
+            {insights.map((ins, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-1.5 shrink-0" />
+                <span>{ins}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
