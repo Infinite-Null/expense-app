@@ -322,20 +322,9 @@ export function DashboardClient({
                       <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
                         {expense.title}
                       </p>
-                      <div className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate flex items-center gap-1.5 mt-0.5">
-                        {expense.merchant && <span>{expense.merchant} ·</span>}
-                        <span
-                          className="inline-flex items-center gap-1 font-medium"
-                          style={{ color: getCategoryColor(expense.category?.name, expense.category?.color) }}
-                        >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: getCategoryColor(expense.category?.name, expense.category?.color) }}
-                          />
-                          {expense.category?.name ?? 'Uncategorized'}
-                        </span>
-                        <span>· {formatShortDate(expense.transaction_date)}</span>
-                      </div>
+                      <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] truncate mt-0.5">
+                        {expense.merchant ?? expense.category?.name ?? 'Uncategorized'} · {formatShortDate(expense.transaction_date)}
+                      </p>
                     </div>
                   </div>
 
