@@ -83,6 +83,31 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
 
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
+  // Close menu when clicking anywhere outside or pressing Escape
+  useEffect(() => {
+    if (!openMenu) return
+
+    function handleOutsideClick(e: MouseEvent | TouchEvent) {
+      const target = e.target as HTMLElement
+      if (target.closest('[data-menu-container]')) {
+        return
+      }
+      setOpenMenu(null)
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenMenu(null)
+    }
+
+    document.addEventListener('pointerdown', handleOutsideClick)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [openMenu])
+
   const hasActiveFilters =
     !!filters.search ||
     !!filters.categoryId ||
@@ -516,7 +541,7 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
                         {formatCurrency(expense.amount, expense.currency)}
                       </span>
 
-                      <div className="relative">
+                      <div className="relative" data-menu-container>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -532,7 +557,7 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
 
                         {isMenuOpen && (
                           <div
-                            className="absolute right-0 top-full mt-1.5 w-48 glass-panel py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)]"
+                            className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-black py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)] rounded-lg"
                             style={{ boxShadow: 'var(--shadow-xl)' }}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -637,7 +662,7 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
                     </Link>
 
                     {/* Actions Menu */}
-                    <div className="relative flex justify-end">
+                    <div className="relative flex justify-end" data-menu-container>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -653,7 +678,7 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
 
                       {isMenuOpen && (
                         <div
-                          className="absolute right-0 top-full mt-1.5 w-44 glass-panel py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)]"
+                          className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-black py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)] rounded-lg"
                           style={{ boxShadow: 'var(--shadow-xl)' }}
                           onClick={(e) => e.stopPropagation()}
                         >

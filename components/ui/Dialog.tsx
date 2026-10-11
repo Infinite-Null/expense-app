@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -30,6 +31,11 @@ export function Dialog({
   size = 'md',
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -53,30 +59,30 @@ export function Dialog({
     }
   }, [open, onClose])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal
       aria-labelledby="dialog-title"
       aria-describedby={description ? 'dialog-description' : undefined}
     >
-      {/* Backdrop */}
+      {/* Full-screen Backdrop covering entire viewport */}
       <div
-        className="absolute inset-0 bg-[var(--color-bg-overlay)] backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden
       />
 
-      {/* Panel */}
+      {/* Dialog Panel */}
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full bg-[var(--color-surface-primary)] rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)]',
-          'border border-[var(--color-border-primary)]',
-          'fade-in',
+          'relative w-full rounded-[var(--radius-xl)] shadow-2xl',
+          'bg-[var(--color-surface-elevated)] backdrop-blur-2xl border border-[var(--color-border-primary)] dark:border-white/10',
+          'fade-in z-10',
           SIZE_CLASS[size],
           className
         )}
@@ -86,14 +92,14 @@ export function Dialog({
           <div>
             <h2
               id="dialog-title"
-              className="text-lg font-semibold text-[var(--color-text-primary)] leading-tight"
+              className="text-lg font-semibold text-[var(--color-text-primary)] leading-tight tracking-tight"
             >
               {title}
             </h2>
             {description && (
               <p
                 id="dialog-description"
-                className="text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed"
+                className="text-sm text-[var(--color-text-secondary)] mt-1.5 leading-relaxed"
               >
                 {description}
               </p>
@@ -111,7 +117,8 @@ export function Dialog({
         {/* Content */}
         <div className="px-6 pb-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

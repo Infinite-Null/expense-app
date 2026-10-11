@@ -182,12 +182,17 @@ export function ExpenseForm({
           />
         </div>
         <div>
-          <label htmlFor="expense-currency" className="form-label">Currency</label>
-          <select id="expense-currency" className="input-base" {...register('currency')}>
+          <Select
+            label="Currency"
+            id="expense-currency"
+            {...register('currency')}
+          >
             {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -202,15 +207,18 @@ export function ExpenseForm({
 
       {/* Category + Date */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-        <div>
-          <label htmlFor="expense-category" className="form-label">Category</label>
-          <select id="expense-category" className="input-base" {...register('category_id')}>
-            <option value="">Select category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Category"
+          id="expense-category"
+          {...register('category_id')}
+        >
+          <option value="">Select category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
         <Input
           label="Date *"
           type="date"
@@ -228,15 +236,18 @@ export function ExpenseForm({
           placeholder="Where did you pay?"
           {...register('merchant')}
         />
-        <div>
-          <label htmlFor="expense-payment" className="form-label">Payment Method</label>
-          <select id="expense-payment" className="input-base" {...register('payment_method')}>
-            <option value="">Select method</option>
-            {PAYMENT_METHODS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Payment Method"
+          id="expense-payment"
+          {...register('payment_method')}
+        >
+          <option value="">Select method</option>
+          {PAYMENT_METHODS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {/* Description */}

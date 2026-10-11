@@ -1,6 +1,7 @@
 'use client'
 
 import { forwardRef } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -126,24 +127,29 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {label}
           </label>
         )}
-        <select
-          id={inputId}
-          ref={ref}
-          className={cn(
-            'input-base appearance-none cursor-pointer',
-            error && 'border-[var(--color-error)]',
-            className
-          )}
-          aria-invalid={!!error}
-          {...props}
-        >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {children}
-        </select>
+        <div className="relative w-full">
+          <select
+            id={inputId}
+            ref={ref}
+            className={cn(
+              'input-base appearance-none cursor-pointer pr-8',
+              error && 'border-[var(--color-error)]',
+              className
+            )}
+            aria-invalid={!!error}
+            {...props}
+          >
+            {placeholder && (
+              <option value="" disabled>
+                {placeholder}
+              </option>
+            )}
+            {children}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)] flex items-center justify-center">
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </div>
         {error && (
           <p className="form-error mt-0.5" role="alert">
             {error}
