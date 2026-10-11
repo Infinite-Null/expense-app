@@ -186,13 +186,16 @@ export function DashboardClient({
       {/* Main Spend Hero Card */}
       <div className="apple-card p-6 sm:p-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-wider uppercase text-[var(--color-text-tertiary)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-[var(--color-text-tertiary)] truncate min-w-0">
               Total Spending ({monthName})
             </span>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Current Cycle</span>
+            <div
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] shrink-0"
+              style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              <Calendar className="w-3 h-3 shrink-0" />
+              <span style={{ whiteSpace: 'nowrap' }}>Current Cycle</span>
             </div>
           </div>
 

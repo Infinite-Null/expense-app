@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* =====================================================
    APPLE HIG MONOCHROMATIC DESIGN SYSTEM (BLACK & WHITE)
    ===================================================== */

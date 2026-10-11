@@ -182,7 +182,7 @@ export function MobileNav() {
         </Link>
         <Link
           href="/expenses/new"
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-semibold active:scale-95 transition-transform shadow-xs"
+          className="btn-primary text-xs px-3 py-1.5 h-8 rounded-[var(--radius-md)] shadow-xs"
           id="mobile-quick-add"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -211,30 +211,35 @@ export function MobileNav() {
             <Link
               key={href}
               href={href}
-              className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-all active:scale-90',
-                isActive
-                  ? 'text-black dark:text-white'
-                  : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
-              )}
+              className="flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-all active:scale-95 select-none"
+              style={{
+                color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+              }}
               aria-current={isActive ? 'page' : undefined}
             >
               <div
                 className={cn(
-                  'p-1 rounded-full transition-all duration-200',
-                  isActive ? 'scale-110' : ''
+                  'p-1.5 rounded-full transition-all duration-200 flex items-center justify-center',
+                  isActive ? 'scale-110 bg-[var(--color-surface-hover)]' : ''
                 )}
+                style={{
+                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                }}
               >
                 <Icon
                   className="w-5 h-5"
                   strokeWidth={isActive ? 2.5 : 1.7}
+                  style={{
+                    color: isActive ? 'var(--color-text-primary)' : 'currentColor',
+                  }}
                 />
               </div>
               <span
-                className={cn(
-                  'text-[0.625rem] tracking-tight leading-none',
-                  isActive ? 'font-semibold' : 'font-normal'
-                )}
+                className="text-[0.625rem] tracking-tight leading-none transition-colors"
+                style={{
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                }}
               >
                 {label}
               </span>

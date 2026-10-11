@@ -447,7 +447,7 @@ export function SettingsClient({ user, profile: initialProfile }: SettingsClient
               onClick={handleDeleteAccount}
               id="confirm-delete-submit"
             >
-              Permanently Delete Account
+              Delete
             </Button>
           </div>
         </div>

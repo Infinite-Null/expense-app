@@ -208,7 +208,7 @@ export function AnalyticsClient({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 page-enter">
+    <div className="flex flex-col gap-6 sm:gap-8 page-enter min-w-0 max-w-full overflow-hidden">
       {/* Title */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
@@ -220,16 +220,16 @@ export function AnalyticsClient({
       </div>
 
       {/* Date Range & Filter Bar */}
-      <div className="apple-card p-4 sm:p-5 space-y-4">
+      <div className="apple-card p-4 sm:p-5 flex flex-col gap-4 overflow-hidden">
         {/* Presets Row: Scrollable pill bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {DATE_PRESETS.map((p) => (
             <button
               key={p.key}
               type="button"
               onClick={() => applyPreset(p.key)}
               className={cn(
-                'px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all select-none border',
+                'px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all select-none border shrink-0',
                 activePreset === p.key
                   ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
                   : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)]'
@@ -241,33 +241,43 @@ export function AnalyticsClient({
         </div>
 
         {/* Custom Range & Category Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[var(--color-border-secondary)]">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[var(--color-text-tertiary)] shrink-0 font-medium">Custom:</span>
-            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-3 border-t border-[var(--color-border-secondary)]">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+              <label htmlFor="analytics-date-from" className="text-[10px] sm:text-xs font-medium text-[var(--color-text-tertiary)] shrink-0">
+                From
+              </label>
               <input
+                id="analytics-date-from"
                 type="date"
                 value={dateFrom}
                 onChange={(e) => { setDateFrom(e.target.value); setActivePreset('') }}
-                className="input-base text-xs py-1.5 px-2.5 w-full sm:w-36"
+                className="input-base text-xs py-2 px-2.5 w-full sm:w-36 min-w-0"
                 aria-label="From date"
               />
-              <span className="text-[var(--color-text-tertiary)]">→</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+              <label htmlFor="analytics-date-to" className="text-[10px] sm:text-xs font-medium text-[var(--color-text-tertiary)] shrink-0">
+                To
+              </label>
               <input
+                id="analytics-date-to"
                 type="date"
                 value={dateTo}
                 onChange={(e) => { setDateTo(e.target.value); setActivePreset('') }}
-                className="input-base text-xs py-1.5 px-2.5 w-full sm:w-36"
+                className="input-base text-xs py-2 px-2.5 w-full sm:w-36 min-w-0"
                 aria-label="To date"
               />
             </div>
           </div>
 
-          <div className="w-full sm:w-48">
+          <div className="w-full sm:w-48 shrink-0">
             <select
+              id="analytics-category-filter"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="input-base text-xs py-1.5 px-2.5 w-full"
+              className="input-base text-xs py-2 px-3 w-full"
               aria-label="Filter by category"
             >
               <option value="">All Categories</option>
@@ -313,7 +323,7 @@ export function AnalyticsClient({
       </div>
 
       {/* Spending Over Time — Monochromatic Area Curve */}
-      <div className="apple-card p-5 sm:p-6 space-y-4">
+      <div className="apple-card p-5 sm:p-6 space-y-4 overflow-hidden">
         <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
           Expenditure Velocity
         </h2>
@@ -322,9 +332,9 @@ export function AnalyticsClient({
         ) : timeData.length === 0 ? (
           <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">No data recorded for this timeframe</p>
         ) : (
-          <div className="h-56 w-full">
+          <div className="h-56 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timeData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+              <AreaChart data={timeData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                 <defs>
                   <linearGradient id="monoCurve" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={isDark ? '#ffffff' : '#000000'} stopOpacity={isDark ? 0.35 : 0.2} />
@@ -334,7 +344,7 @@ export function AnalyticsClient({
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-secondary)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false}
-                  tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={60} />
+                  tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={50} />
                 <Tooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="amount" name="Spent"
                   stroke={isDark ? '#ffffff' : '#000000'}
@@ -403,20 +413,20 @@ export function AnalyticsClient({
         </div>
 
         {/* Weekday spending — Monochromatic Bar Chart */}
-        <div className="apple-card p-5 sm:p-6 space-y-4">
+        <div className="apple-card p-5 sm:p-6 space-y-4 overflow-hidden">
           <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
             Distribution by Weekday
           </h2>
           {loading ? (
             <div className="skeleton h-48 rounded-[var(--radius-md)]" />
           ) : (
-            <div className="h-56 w-full">
+            <div className="h-56 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weekdayData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                <BarChart data={weekdayData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-secondary)" vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} tickLine={false} axisLine={false}
-                    tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={55} />
+                    tickFormatter={(v) => formatCurrencyCompact(v, currency)} width={50} />
                   <Tooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="amount" name="Spent" fill={isDark ? '#ffffff' : '#000000'} radius={[4, 4, 0, 0]} maxBarSize={32}>
                     {weekdayData.map((entry) => (
