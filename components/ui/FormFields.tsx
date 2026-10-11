@@ -23,9 +23,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <div className="relative">
+        <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] pointer-events-none">
+            <div className="absolute left-3.5 z-10 flex items-center pointer-events-none text-[var(--color-text-tertiary)]">
               {leftIcon}
             </div>
           )}
@@ -34,17 +34,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={cn(
               'input-base',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              leftIcon && 'has-left-icon !pl-10',
+              rightIcon && 'has-right-icon !pr-10',
               error && 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[0_0_0_3px_var(--color-error-bg)]',
               className
             )}
+            style={{
+              ...(leftIcon ? { paddingLeft: '2.625rem' } : {}),
+              ...(rightIcon ? { paddingRight: '2.625rem' } : {}),
+              ...props.style,
+            }}
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
+            <div className="absolute right-3.5 z-10 flex items-center text-[var(--color-text-tertiary)]">
               {rightIcon}
             </div>
           )}

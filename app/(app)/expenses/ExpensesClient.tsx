@@ -329,12 +329,13 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
       {/* Search & filter bar */}
       <div className="space-y-3">
         <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
+          <div className="flex-1 relative flex items-center">
+            <Search className="absolute left-3.5 z-10 w-4 h-4 text-[var(--color-text-tertiary)] pointer-events-none" />
             <input
               type="search"
               placeholder="Search by name, merchant, or notes…"
-              className="input-base pl-10 pr-4"
+              className="input-base has-left-icon !pl-10 pr-4"
+              style={{ paddingLeft: '2.625rem' }}
               onChange={(e) => handleSearchChange(e.target.value)}
               id="expenses-search"
               aria-label="Search expenses"
