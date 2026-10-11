@@ -425,14 +425,17 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
       </div>
 
       {/* Expenses list */}
-      <div className="card overflow-hidden">
+      <div className="card">
         {/* Table header (desktop) */}
-        <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-[var(--color-border-secondary)]">
+        <div className="hidden md:grid grid-cols-[1fr_120px_130px_110px_110px_40px] gap-3 items-center px-5 py-3 border-b border-[var(--color-border-secondary)]">
           <SortButton field="title" label="Expense" />
           <SortButton field="transaction_date" label="Date" />
           <span className="text-xs text-[var(--color-text-tertiary)] font-medium">Category</span>
           <span className="text-xs text-[var(--color-text-tertiary)] font-medium">Method</span>
-          <SortButton field="amount" label="Amount" />
+          <div className="text-right">
+            <SortButton field="amount" label="Amount" />
+          </div>
+          <span className="sr-only">Actions</span>
         </div>
 
         {loading && expenses.length === 0 ? (
@@ -477,139 +480,221 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
           </div>
         ) : (
           <ul role="list" className="divide-y divide-[var(--color-border-secondary)]">
-            {expenses.map((expense) => (
-              <li key={expense.id} className="group relative">
-                {/* Mobile layout */}
-                <div className="md:hidden px-5 py-4">
-                  <Link href={`/expenses/${expense.id}`} className="block">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center flex-shrink-0">
-                          <Receipt className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
-                            {expense.title}
-                          </p>
-                          <p className="text-xs text-[var(--color-text-tertiary)]">
-                            {formatDate(expense.transaction_date, 'dd MMM')} ·{' '}
-                            {expense.category?.name ?? 'Uncategorized'}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-[var(--color-text-primary)] flex-shrink-0 tabular-nums">
-                        {formatCurrency(expense.amount, expense.currency)}
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-
-                {/* Desktop layout */}
-                <Link
-                  href={`/expenses/${expense.id}`}
-                  className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-5 py-4 hover:bg-[var(--color-surface-hover)] transition-colors"
+            {expenses.map((expense) => {
+              const isMenuOpen = openMenu === expense.id
+              return (
+                <li
+                  key={expense.id}
+                  className={cn(
+                    'transition-colors',
+                    isMenuOpen ? 'relative z-40' : 'relative z-0 hover:bg-[var(--color-surface-hover)]'
+                  )}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center flex-shrink-0">
-                      <Receipt className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
-                        {expense.title}
-                      </p>
-                      {expense.merchant && (
-                        <p className="text-xs text-[var(--color-text-tertiary)] truncate">
-                          {expense.merchant}
+                  {/* Mobile layout */}
+                  <div className="md:hidden flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center shrink-0">
+                        <Receipt className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                          {expense.title}
                         </p>
-                      )}
-                      {expense.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {expense.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag.id}
-                              className="badge text-[0.625rem] px-1.5 py-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]"
+                        <p className="text-xs text-[var(--color-text-tertiary)] truncate">
+                          {formatDate(expense.transaction_date, 'dd MMM')} ·{' '}
+                          {expense.category?.name ?? 'Uncategorized'}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* Price and 3-dot action button arranged side-by-side */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-bold text-[var(--color-text-primary)] tabular-nums">
+                        {formatCurrency(expense.amount, expense.currency)}
+                      </span>
+
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setOpenMenu(isMenuOpen ? null : expense.id)
+                          }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] active:scale-95 transition-all"
+                          aria-label="More actions"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {isMenuOpen && (
+                          <div
+                            className="absolute right-0 top-full mt-1.5 w-48 glass-panel py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)]"
+                            style={{ boxShadow: 'var(--shadow-xl)' }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Link
+                              href={`/expenses/${expense.id}`}
+                              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                              onClick={() => setOpenMenu(null)}
                             >
-                              #{tag.name}
-                            </span>
-                          ))}
+                              <Edit2 className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                              <span>Edit</span>
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleDuplicate(expense)
+                                setOpenMenu(null)
+                              }}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
+                            >
+                              <Copy className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                              <span>Duplicate</span>
+                            </button>
+                            <div className="h-[0.5px] bg-[var(--color-border-secondary)] my-1" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeleteTarget(expense.id)
+                                setOpenMenu(null)
+                              }}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left font-medium"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop layout */}
+                  <div className="hidden md:grid grid-cols-[1fr_120px_130px_110px_110px_40px] gap-3 items-center px-5 py-3.5">
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="flex items-center gap-3 min-w-0"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] flex items-center justify-center shrink-0">
+                        <Receipt className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                          {expense.title}
+                        </p>
+                        {expense.merchant && (
+                          <p className="text-xs text-[var(--color-text-tertiary)] truncate">
+                            {expense.merchant}
+                          </p>
+                        )}
+                        {expense.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {expense.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="badge text-[0.625rem] px-1.5 py-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border-primary)]"
+                              >
+                                #{tag.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="text-sm text-[var(--color-text-secondary)] whitespace-nowrap"
+                    >
+                      {formatDate(expense.transaction_date, 'dd MMM yyyy')}
+                    </Link>
+
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="text-sm text-[var(--color-text-secondary)] truncate"
+                    >
+                      {expense.category?.name ?? '—'}
+                    </Link>
+
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="text-sm text-[var(--color-text-tertiary)] truncate"
+                    >
+                      {expense.payment_method
+                        ? PAYMENT_METHOD_LABELS[expense.payment_method]
+                        : '—'}
+                    </Link>
+
+                    <Link
+                      href={`/expenses/${expense.id}`}
+                      className="text-sm font-bold text-[var(--color-text-primary)] text-right tabular-nums"
+                    >
+                      {formatCurrency(expense.amount, expense.currency)}
+                    </Link>
+
+                    {/* Actions Menu */}
+                    <div className="relative flex justify-end">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setOpenMenu(isMenuOpen ? null : expense.id)
+                        }}
+                        className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] active:scale-95 transition-all"
+                        aria-label="More actions"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+
+                      {isMenuOpen && (
+                        <div
+                          className="absolute right-0 top-full mt-1.5 w-44 glass-panel py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)]"
+                          style={{ boxShadow: 'var(--shadow-xl)' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Link
+                            href={`/expenses/${expense.id}`}
+                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                            onClick={() => setOpenMenu(null)}
+                          >
+                            <Edit2 className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                            <span>Edit</span>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleDuplicate(expense)
+                              setOpenMenu(null)
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
+                          >
+                            <Copy className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                            <span>Duplicate</span>
+                          </button>
+                          <div className="h-[0.5px] bg-[var(--color-border-secondary)] my-1" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteTarget(expense.id)
+                              setOpenMenu(null)
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left font-medium"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                            <span>Delete</span>
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
-
-                  <span className="text-sm text-[var(--color-text-secondary)] text-right whitespace-nowrap">
-                    {formatDate(expense.transaction_date, 'dd MMM yyyy')}
-                  </span>
-
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    {expense.category?.name ?? '—'}
-                  </span>
-
-                  <span className="text-sm text-[var(--color-text-tertiary)]">
-                    {expense.payment_method
-                      ? PAYMENT_METHOD_LABELS[expense.payment_method]
-                      : '—'}
-                  </span>
-
-                  <span className="text-sm font-bold text-[var(--color-text-primary)] text-right tabular-nums">
-                    {formatCurrency(expense.amount, expense.currency)}
-                  </span>
-                </Link>
-
-                {/* Action menu */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setOpenMenu(openMenu === expense.id ? null : expense.id)
-                      }}
-                      className="btn-ghost p-2 rounded-[var(--radius-md)]"
-                      aria-label="More actions"
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-
-                    {openMenu === expense.id && (
-                      <div
-                        className="absolute right-0 top-full mt-1 w-44 card py-1 z-20"
-                        style={{ boxShadow: 'var(--shadow-lg)' }}
-                      >
-                        <Link
-                          href={`/expenses/${expense.id}`}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                          onClick={() => setOpenMenu(null)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => {
-                            handleDuplicate(expense)
-                            setOpenMenu(null)
-                          }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          Duplicate
-                        </button>
-                        <div className="divider my-1" />
-                        <button
-                          onClick={() => {
-                            setDeleteTarget(expense.id)
-                            setOpenMenu(null)
-                          }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-error-text)] hover:bg-[var(--color-error-bg)] transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              )
+            })}
           </ul>
         )}
 
@@ -647,7 +732,7 @@ export function ExpensesClient({ categories, tags, currency }: ExpensesClientPro
       {/* Close menus on outside click */}
       {openMenu && (
         <div
-          className="fixed inset-0 z-10"
+          className="fixed inset-0 z-30"
           onClick={() => setOpenMenu(null)}
           aria-hidden
         />
