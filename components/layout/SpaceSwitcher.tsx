@@ -3,11 +3,15 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useApp } from '@/components/providers/AppProvider'
 import { CreateSpaceModal } from './CreateSpaceModal'
+import { EditSpaceModal } from './EditSpaceModal'
+import { DeleteSpaceModal } from './DeleteSpaceModal'
 import {
   ChevronsUpDown,
   Plus,
   Check,
   Search,
+  Pencil,
+  Trash2,
   Layers,
   Home,
   Car,
@@ -20,6 +24,7 @@ import {
   Folder,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import type { Space } from '@/lib/types/database'
 
 const ICON_MAP: Record<string, React.ElementType> = {
   layers: Layers,
@@ -39,6 +44,10 @@ export function SpaceSwitcher({ isMobile = false }: { isMobile?: boolean }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [editingSpace, setEditingSpace] = useState<Space | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deletingSpace, setDeletingSpace] = useState<Space | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Close on click outside
@@ -198,21 +207,28 @@ export function SpaceSwitcher({ isMobile = false }: { isMobile?: boolean }) {
                 const SpaceIconComponent = space.icon ? ICON_MAP[space.icon] || Layers : Layers
 
                 return (
-                  <button
+                  <div
                     key={space.id}
-                    type="button"
                     onClick={() => {
                       setCurrentSpace(space)
                       setOpen(false)
                     }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setCurrentSpace(space)
+                        setOpen(false)
+                      }
+                    }}
                     className={cn(
-                      'w-full flex items-center justify-between p-2 rounded-lg text-left transition-all duration-150 group',
+                      'w-full flex items-center justify-between p-2 rounded-lg text-left transition-all duration-150 group cursor-pointer select-none',
                       isActive
                         ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] font-medium shadow-2xs'
                         : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]/70'
                     )}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       {/* Avatar Icon */}
                       <div
                         className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center font-bold text-xs border"
@@ -225,7 +241,7 @@ export function SpaceSwitcher({ isMobile = false }: { isMobile?: boolean }) {
                         {initial}
                       </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs truncate tracking-tight font-medium text-[var(--color-text-primary)]">
                           {space.name}
                         </p>
@@ -237,11 +253,46 @@ export function SpaceSwitcher({ isMobile = false }: { isMobile?: boolean }) {
                       </div>
                     </div>
 
-                    {/* Active Checkmark Icon */}
-                    {isActive && (
-                      <Check className="w-4 h-4 text-[var(--color-text-primary)] shrink-0 ml-2" />
-                    )}
-                  </button>
+                    {/* Actions and Active indicator */}
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      {/* Edit Button */}
+                      <button
+                        type="button"
+                        title={`Edit ${space.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingSpace(space)
+                          setEditModalOpen(true)
+                          setOpen(false)
+                        }}
+                        className="p-1 rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-150 active:scale-95"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Delete Button (Only for non-default spaces) */}
+                      {!space.is_default && (
+                        <button
+                          type="button"
+                          title={`Delete ${space.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDeletingSpace(space)
+                            setDeleteModalOpen(true)
+                            setOpen(false)
+                          }}
+                          className="p-1 rounded-md text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-500/10 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-150 active:scale-95"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {/* Active Checkmark Icon */}
+                      {isActive && (
+                        <Check className="w-4 h-4 text-[var(--color-text-primary)] shrink-0 ml-0.5" />
+                      )}
+                    </div>
+                  </div>
                 )
               })
             )}
@@ -251,6 +302,26 @@ export function SpaceSwitcher({ isMobile = false }: { isMobile?: boolean }) {
 
       {/* Create Space Dialog */}
       <CreateSpaceModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} />
+
+      {/* Edit Space Dialog */}
+      <EditSpaceModal
+        space={editingSpace}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false)
+          setEditingSpace(null)
+        }}
+      />
+
+      {/* Delete Space Dialog */}
+      <DeleteSpaceModal
+        space={deletingSpace}
+        open={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false)
+          setDeletingSpace(null)
+        }}
+      />
     </div>
   )
 }

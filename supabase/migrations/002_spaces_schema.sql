@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.spaces (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 2. Add space_id column to expenses table (nullable for backward compatibility)
+-- 2. Add space_id column to expenses table (nullable for backward compatibility, CASCADE on delete so space expenses are removed with it)
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS space_id UUID REFERENCES public.spaces(id) ON DELETE CASCADE;
 
 -- 3. Indexes for fast lookups

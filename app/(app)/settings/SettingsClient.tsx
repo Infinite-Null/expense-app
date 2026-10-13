@@ -13,6 +13,10 @@ import {
   ArrowRight,
   Check,
   AlertTriangle,
+  Layers,
+  Plus,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -23,7 +27,10 @@ import { useTheme } from '@/components/providers/ThemeProvider'
 import { Input, Select } from '@/components/ui/FormFields'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
-import type { Profile } from '@/lib/types/database'
+import { CreateSpaceModal } from '@/components/layout/CreateSpaceModal'
+import { EditSpaceModal } from '@/components/layout/EditSpaceModal'
+import { DeleteSpaceModal } from '@/components/layout/DeleteSpaceModal'
+import type { Profile, Space } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
 
@@ -77,6 +84,13 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Spaces modal states
+  const [createSpaceModalOpen, setCreateSpaceModalOpen] = useState(false)
+  const [editingSpace, setEditingSpace] = useState<Space | null>(null)
+  const [editSpaceModalOpen, setEditSpaceModalOpen] = useState(false)
+  const [deletingSpace, setDeletingSpace] = useState<Space | null>(null)
+  const [deleteSpaceModalOpen, setDeleteSpaceModalOpen] = useState(false)
 
   const {
     register,
@@ -375,6 +389,110 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
         </div>
       </form>
 
+      {/* Spaces & Organizations Management */}
+      <div className="apple-card p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+                Spaces & Organizations
+              </h2>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Organize expenses into separate spaces (e.g. Personal, House, Garage) under one account
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setCreateSpaceModalOpen(true)}
+            className="self-start sm:self-auto inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Space</span>
+          </Button>
+        </div>
+
+        {/* Space list items */}
+        <div className="divide-y divide-[var(--color-border-primary)] rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)]/30 overflow-hidden">
+          {app.spaces.length === 0 ? (
+            <div className="p-4 text-center text-xs text-[var(--color-text-tertiary)]">
+              No spaces configured yet.
+            </div>
+          ) : (
+            app.spaces.map((space) => {
+              const initial = (space.name[0] || 'S').toUpperCase()
+              return (
+                <div
+                  key={space.id}
+                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-[var(--color-surface-hover)]/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-xs border"
+                      style={{
+                        backgroundColor: space.color ? `${space.color}15` : 'var(--color-surface-primary)',
+                        borderColor: space.color ? `${space.color}40` : 'var(--color-border-primary)',
+                        color: space.color || 'var(--color-text-primary)',
+                      }}
+                    >
+                      {initial}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                          {space.name}
+                        </span>
+                        {space.is_default && (
+                          <span className="text-[0.625rem] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
+                            Default Space
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSpace(space)
+                        setEditSpaceModalOpen(true)
+                      }}
+                      className="h-8 px-2.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    >
+                      <Pencil className="w-3.5 h-3.5 mr-1" />
+                      <span>Edit</span>
+                    </Button>
+
+                    {!space.is_default && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setDeletingSpace(space)
+                          setDeleteSpaceModalOpen(true)
+                        }}
+                        className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        <span>Delete</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
+
       {/* Data Management Link */}
       <div className="apple-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -481,6 +599,30 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
           </div>
         </div>
       </Dialog>
+
+      {/* Spaces Modals */}
+      <CreateSpaceModal
+        open={createSpaceModalOpen}
+        onClose={() => setCreateSpaceModalOpen(false)}
+      />
+
+      <EditSpaceModal
+        space={editingSpace}
+        open={editSpaceModalOpen}
+        onClose={() => {
+          setEditSpaceModalOpen(false)
+          setEditingSpace(null)
+        }}
+      />
+
+      <DeleteSpaceModal
+        space={deletingSpace}
+        open={deleteSpaceModalOpen}
+        onClose={() => {
+          setDeleteSpaceModalOpen(false)
+          setDeletingSpace(null)
+        }}
+      />
     </div>
   )
 }

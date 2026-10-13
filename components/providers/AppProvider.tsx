@@ -18,6 +18,8 @@ interface AppContextValue {
   loading: boolean
   setCurrentSpace: (space: Space | null) => void
   createSpace: (name: string, icon?: string | null, color?: string | null) => Promise<Space | null>
+  updateSpace: (id: string, updates: { name: string; icon?: string | null; color?: string | null }) => Promise<Space | null>
+  deleteSpace: (id: string) => Promise<{ success: boolean; error?: string }>
   refreshCategories: () => Promise<void>
   refreshTags: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -36,6 +38,8 @@ const AppContext = createContext<AppContextValue>({
   loading: true,
   setCurrentSpace: () => {},
   createSpace: async () => null,
+  updateSpace: async () => null,
+  deleteSpace: async () => ({ success: false }),
   refreshCategories: async () => {},
   refreshTags: async () => {},
   refreshProfile: async () => {},
@@ -153,6 +157,109 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [supabase, setCurrentSpace]
+  )
+
+  const updateSpace = useCallback(
+    async (
+      id: string,
+      updates: { name: string; icon?: string | null; color?: string | null }
+    ): Promise<Space | null> => {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
+      if (!currentUser) return null
+
+      try {
+        const { data, error } = await supabase
+          .from('spaces')
+          .update({
+            name: updates.name.trim(),
+            icon: updates.icon || 'layers',
+            color: updates.color || '#4F46E5',
+          })
+          .eq('id', id)
+          .eq('user_id', currentUser.id)
+          .select()
+          .single()
+
+        if (error || !data) {
+          console.error('Error updating space:', error)
+          return null
+        }
+
+        setSpaces((prev) => prev.map((s) => (s.id === id ? data : s)))
+        setCurrentSpaceState((prev) => (prev?.id === id ? data : prev))
+        return data
+      } catch (err) {
+        console.error('updateSpace exception:', err)
+        return null
+      }
+    },
+    [supabase]
+  )
+
+  const deleteSpace = useCallback(
+    async (id: string): Promise<{ success: boolean; error?: string }> => {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
+      if (!currentUser) return { success: false, error: 'Not authenticated' }
+
+      const targetSpace = spaces.find((s) => s.id === id)
+      if (!targetSpace) return { success: false, error: 'Space not found' }
+      if (targetSpace.is_default) {
+        return { success: false, error: 'The default space cannot be deleted.' }
+      }
+      if (spaces.length <= 1) {
+        return { success: false, error: 'You must have at least one space.' }
+      }
+
+      try {
+        // Find default space or fallback to first other space
+        const defaultSpace =
+          spaces.find((s) => s.is_default && s.id !== id) || spaces.find((s) => s.id !== id)
+        if (!defaultSpace) return { success: false, error: 'No fallback space available.' }
+
+        // 1. Delete all expenses belonging to this space
+        const { error: expensesDeleteError } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('user_id', currentUser.id)
+          .eq('space_id', id)
+
+        if (expensesDeleteError) {
+          console.error('Error deleting space expenses:', expensesDeleteError)
+          return { success: false, error: 'Failed to delete expenses for this space.' }
+        }
+
+        // 2. Delete space row
+        const { error: deleteError } = await supabase
+          .from('spaces')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', currentUser.id)
+
+        if (deleteError) {
+          console.error('Error deleting space:', deleteError)
+          return { success: false, error: deleteError.message }
+        }
+
+        // 3. Update spaces state
+        const remaining = spaces.filter((s) => s.id !== id)
+        setSpaces(remaining)
+
+        // 4. If current space was the deleted one, switch to default space
+        if (currentSpace?.id === id) {
+          setCurrentSpace(defaultSpace)
+        }
+
+        return { success: true }
+      } catch (err: any) {
+        console.error('deleteSpace exception:', err)
+        return { success: false, error: err?.message || 'Failed to delete space.' }
+      }
+    },
+    [supabase, spaces, currentSpace, setCurrentSpace]
   )
 
   useEffect(() => {
@@ -311,6 +418,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         loading,
         setCurrentSpace,
         createSpace,
+        updateSpace,
+        deleteSpace,
         refreshCategories,
         refreshTags,
         refreshProfile,

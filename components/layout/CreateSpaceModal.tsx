@@ -28,7 +28,7 @@ interface CreateSpaceModalProps {
   onClose: () => void
 }
 
-const SPACE_ICONS = [
+export const SPACE_ICONS = [
   { id: 'layers', icon: Layers, label: 'Default' },
   { id: 'home', icon: Home, label: 'House' },
   { id: 'car', icon: Car, label: 'Garage' },
@@ -39,7 +39,7 @@ const SPACE_ICONS = [
   { id: 'heart', icon: Heart, label: 'Family' },
 ]
 
-const SPACE_COLORS = [
+export const SPACE_COLORS = [
   '#4F46E5', // Indigo
   '#2563EB', // Blue
   '#059669', // Emerald
