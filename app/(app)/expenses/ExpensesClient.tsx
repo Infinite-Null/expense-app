@@ -129,6 +129,7 @@ export function ExpensesClient({
   const fetchExpenses = useCallback(
     async (reset = false) => {
       setLoading(true)
+      const startTime = Date.now()
       const currentPage = reset ? 0 : page
 
       try {
@@ -203,18 +204,24 @@ export function ExpensesClient({
       } catch (err) {
         toastError('Failed to load expenses')
       } finally {
+        const elapsed = Date.now() - startTime
+        if (elapsed < 350) {
+          await new Promise((resolve) => setTimeout(resolve, 350 - elapsed))
+        }
         setLoading(false)
       }
     },
-    [page, filters, sortField, sortDir, toastError, app.currentSpace?.id, app.isAllSpaces]
+    [page, filters, sortField, sortDir, toastError, app.currentSpace?.id, app.currentSpace?.is_default, app.isAllSpaces]
   )
 
   // Refetch when filters/sort or space change
   useEffect(() => {
+    setLoading(true)
+    setExpenses([])
     setPage(0)
     fetchExpenses(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, sortField, sortDir, app.currentSpace?.id, app.isAllSpaces])
+  }, [filters, sortField, sortDir, app.currentSpace?.id, app.currentSpace?.is_default, app.isAllSpaces])
 
   function handleSearchChange(val: string) {
     clearTimeout(searchTimer.current)
@@ -325,6 +332,8 @@ export function ExpensesClient({
     )
   }
 
+  const isPageLoading = loading || app.isSwitchingSpace
+
   return (
     <div className="space-y-6 page-enter">
       {/* Header */}
@@ -334,7 +343,11 @@ export function ExpensesClient({
             Expenses
           </h1>
           <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
-            {loading ? '…' : `${total.toLocaleString()} transaction${total !== 1 ? 's' : ''}`}
+            {isPageLoading ? (
+              <span className="inline-block h-4 w-28 skeleton rounded-md align-middle" />
+            ) : (
+              `${total.toLocaleString()} transaction${total !== 1 ? 's' : ''}`
+            )}
           </p>
         </div>
         <Link href="/expenses/new" className="btn-primary" id="expenses-add-new">
@@ -481,11 +494,11 @@ export function ExpensesClient({
           <span className="sr-only">Actions</span>
         </div>
 
-        {loading && expenses.length === 0 ? (
-          <div className="divide-y divide-[var(--color-border-secondary)]">
+        {isPageLoading ? (
+          <div className="divide-y divide-[var(--color-border-secondary)] animate-in fade-in duration-200">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="px-5 py-4 flex items-center gap-4">
-                <div className="skeleton w-9 h-9 rounded-[var(--radius-md)]" />
+                <div className="skeleton w-8 h-8 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="skeleton h-4 w-40 rounded" />
                   <div className="skeleton h-3 w-24 rounded" />

@@ -241,7 +241,7 @@ export function DashboardClient({
   categoryBreakdown: propCategoryBreakdown,
 }: Partial<DashboardClientProps> = {}) {
   const { resolvedTheme } = useTheme()
-  const { user, profile, currentSpace, isAllSpaces } = useApp()
+  const { user, profile, currentSpace, isAllSpaces, isSwitchingSpace } = useApp()
 
   const displayName = propDisplayName ?? profile?.display_name
   const currency = propCurrency ?? profile?.preferred_currency ?? 'INR'
@@ -269,6 +269,8 @@ export function DashboardClient({
 
   const loadData = useCallback(async () => {
     if (propThisMonthTotal !== undefined) return
+    setLoading(true)
+    const startTime = Date.now()
     const supabase = createClient()
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (!currentUser) return
@@ -277,30 +279,68 @@ export function DashboardClient({
     const isDefault = currentSpace?.is_default ?? false
 
     const res = await loadDashboardMetrics(currentUser.id, supabase, spaceId, isDefault)
+    const elapsed = Date.now() - startTime
+    if (elapsed < 350) {
+      await new Promise((resolve) => setTimeout(resolve, 350 - elapsed))
+    }
     setData(res)
     setLoading(false)
   }, [propThisMonthTotal, currentSpace?.id, currentSpace?.is_default, isAllSpaces])
 
   useEffect(() => {
+    setLoading(true)
     loadData()
   }, [loadData])
 
-  if (loading && !data) {
+  const isPageLoading = loading || isSwitchingSpace
+
+  if (isPageLoading) {
     return (
-      <div className="flex flex-col gap-6 sm:gap-8 page-enter">
+      <div className="flex flex-col gap-6 sm:gap-8 page-enter animate-in fade-in duration-200">
         <div className="flex flex-col gap-2">
           <div className="h-4 w-40 skeleton rounded-md" />
           <div className="h-8 w-56 skeleton rounded-md mt-1" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="h-28 skeleton rounded-2xl" />
-          <div className="h-28 skeleton rounded-2xl" />
-          <div className="h-28 skeleton rounded-2xl" />
-          <div className="h-28 skeleton rounded-2xl" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="apple-card p-4 sm:p-5 h-28 flex flex-col justify-between">
+              <div className="h-3 w-20 skeleton rounded" />
+              <div>
+                <div className="h-7 w-28 skeleton rounded-md" />
+                <div className="h-2.5 w-16 skeleton rounded mt-2" />
+              </div>
+            </div>
+          ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="lg:col-span-2 h-72 skeleton rounded-2xl" />
-          <div className="h-72 skeleton rounded-2xl" />
+          <div className="lg:col-span-2 apple-card p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="h-5 w-36 skeleton rounded" />
+              <div className="h-4 w-20 skeleton rounded" />
+            </div>
+            <div className="divide-y divide-[var(--color-border-secondary)]">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full skeleton" />
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 w-32 skeleton rounded" />
+                      <div className="h-2.5 w-20 skeleton rounded" />
+                    </div>
+                  </div>
+                  <div className="h-4 w-16 skeleton rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="apple-card p-6 flex flex-col justify-between">
+            <div className="h-5 w-32 skeleton rounded mb-4" />
+            <div className="w-44 h-44 rounded-full skeleton mx-auto my-auto" />
+            <div className="space-y-2 mt-4">
+              <div className="h-3 w-full skeleton rounded" />
+              <div className="h-3 w-3/4 skeleton rounded" />
+            </div>
+          </div>
         </div>
       </div>
     )

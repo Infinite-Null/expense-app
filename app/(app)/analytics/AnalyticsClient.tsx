@@ -112,6 +112,7 @@ export function AnalyticsClient({
       }
     }
 
+    const startTime = Date.now()
     const [{ data: curr }, { data: prevData }] = await Promise.all([
       query,
       prevQuery,
@@ -123,10 +124,21 @@ export function AnalyticsClient({
       tags: (e.expense_tags ?? []).map((et: any) => et.tag ?? et.tags).filter(Boolean),
     })))
     setPrevExpenses(prevData ?? [])
+    const elapsed = Date.now() - startTime
+    if (elapsed < 350) {
+      await new Promise((resolve) => setTimeout(resolve, 350 - elapsed))
+    }
     setLoading(false)
-  }, [dateFrom, dateTo, filterCategory, app.currentSpace?.id, app.isAllSpaces])
+  }, [dateFrom, dateTo, filterCategory, app.currentSpace?.id, app.currentSpace?.is_default, app.isAllSpaces])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    setLoading(true)
+    setExpenses([])
+    setPrevExpenses([])
+    fetchData()
+  }, [fetchData])
+
+  const isPageLoading = loading || app.isSwitchingSpace
 
   // Computed analytics
   const totalSpend = expenses.reduce((s, e) => s + Number(e.amount), 0)
@@ -326,34 +338,56 @@ export function AnalyticsClient({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="apple-card p-4 sm:p-5 col-span-2">
           <p className="text-xs font-medium text-[var(--color-text-secondary)]">Total Volume</p>
-          <p className="text-3xl font-extrabold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
-            {loading ? '—' : formatCurrency(totalSpend, currency)}
-          </p>
-          {change !== null && (
+          <div className="mt-1">
+            {isPageLoading ? (
+              <span className="inline-block h-8 w-36 skeleton rounded-md" />
+            ) : (
+              <p className="text-3xl font-extrabold text-[var(--color-text-primary)] tracking-tight tabular-nums">
+                {formatCurrency(totalSpend, currency)}
+              </p>
+            )}
+          </div>
+          {change !== null && !isPageLoading && (
             <div className="inline-flex items-center gap-1 text-xs font-medium mt-1 text-[var(--color-text-secondary)]">
               {change < 0 ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
               <span>{formatPercentage(change)} vs previous period</span>
             </div>
           )}
-          {change === null && !loading && (
+          {change === null && !isPageLoading && (
             <p className="text-xs text-[var(--color-text-tertiary)] mt-1">No comparative baseline</p>
           )}
         </div>
 
         <div className="apple-card p-4 sm:p-5">
           <p className="text-xs font-medium text-[var(--color-text-secondary)]">Avg Ticket</p>
-          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
-            {loading ? '—' : formatCurrencyCompact(avgTransaction, currency)}
+          <div className="mt-1">
+            {isPageLoading ? (
+              <span className="inline-block h-7 w-24 skeleton rounded-md" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight tabular-nums">
+                {formatCurrencyCompact(avgTransaction, currency)}
+              </p>
+            )}
+          </div>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">
+            {isPageLoading ? <span className="inline-block h-3 w-16 skeleton rounded" /> : `${expenses.length} records`}
           </p>
-          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">{expenses.length} records</p>
         </div>
 
         <div className="apple-card p-4 sm:p-5">
           <p className="text-xs font-medium text-[var(--color-text-secondary)]">Max Outlay</p>
-          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mt-1 tracking-tight tabular-nums">
-            {loading ? '—' : formatCurrencyCompact(maxExpense, currency)}
+          <div className="mt-1">
+            {isPageLoading ? (
+              <span className="inline-block h-7 w-24 skeleton rounded-md" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight tabular-nums">
+                {formatCurrencyCompact(maxExpense, currency)}
+              </p>
+            )}
+          </div>
+          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">
+            {isPageLoading ? <span className="inline-block h-3 w-24 skeleton rounded" /> : 'Single transaction'}
           </p>
-          <p className="text-[0.6875rem] text-[var(--color-text-tertiary)] mt-1">Single transaction</p>
         </div>
       </div>
 
@@ -375,7 +409,7 @@ export function AnalyticsClient({
           </div>
         </div>
 
-        {loading ? (
+        {isPageLoading ? (
           <div className="skeleton h-56 rounded-[var(--radius-md)]" />
         ) : categoryData.length === 0 ? (
           <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">
@@ -464,7 +498,7 @@ export function AnalyticsClient({
         <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
           Expenditure Velocity
         </h2>
-        {loading ? (
+        {isPageLoading ? (
           <div className="skeleton h-48 rounded-[var(--radius-md)]" />
         ) : timeData.length === 0 ? (
           <p className="text-xs text-[var(--color-text-tertiary)] text-center py-12">No data recorded for this timeframe</p>
@@ -572,7 +606,7 @@ export function AnalyticsClient({
       </div>
 
       {/* Insights */}
-      {!loading && insights.length > 0 && (
+      {!isPageLoading && insights.length > 0 && (
         <div className="apple-card p-5 sm:p-6 space-y-3">
           <h2 className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)] flex items-center gap-2">
             <Lightbulb className="w-4 h-4 text-[var(--color-text-primary)]" />

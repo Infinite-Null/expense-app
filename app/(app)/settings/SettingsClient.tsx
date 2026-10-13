@@ -446,11 +446,6 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
                         <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
                           {space.name}
                         </span>
-                        {space.is_default && (
-                          <span className="text-[0.625rem] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
-                            Default Space
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -467,7 +462,6 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
                       className="h-8 px-2.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                     >
                       <Pencil className="w-3.5 h-3.5 mr-1" />
-                      <span>Edit</span>
                     </Button>
 
                     {!space.is_default && (
@@ -482,7 +476,6 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
                         className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-1" />
-                        <span>Delete</span>
                       </Button>
                     )}
                   </div>

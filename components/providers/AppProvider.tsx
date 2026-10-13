@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Layers } from 'lucide-react'
 import type { Category, Tag, Profile, Space } from '@/lib/types/database'
 import type { User } from '@supabase/supabase-js'
 
@@ -14,6 +15,7 @@ interface AppContextValue {
   spaces: Space[]
   currentSpace: Space | null
   isAllSpaces: boolean
+  isSwitchingSpace: boolean
   currency: string
   loading: boolean
   setCurrentSpace: (space: Space | null) => void
@@ -34,6 +36,7 @@ const AppContext = createContext<AppContextValue>({
   spaces: [],
   currentSpace: null,
   isAllSpaces: false,
+  isSwitchingSpace: false,
   currency: 'INR',
   loading: true,
   setCurrentSpace: () => {},
@@ -56,11 +59,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tags, setTags] = useState<Tag[]>([])
   const [spaces, setSpaces] = useState<Space[]>([])
   const [currentSpace, setCurrentSpaceState] = useState<Space | null>(null)
+  const [isSwitchingSpace, setIsSwitchingSpace] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const supabase = useMemo(() => createClient(), [])
 
   const setCurrentSpace = useCallback((space: Space | null) => {
+    setIsSwitchingSpace(true)
     setCurrentSpaceState(space)
     if (typeof window !== 'undefined') {
       try {
@@ -73,6 +78,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to store active space in localStorage:', e)
       }
     }
+    // Maintain a smooth 450ms minimum transition window so all screens display Apple-level skeleton motion
+    setTimeout(() => {
+      setIsSwitchingSpace(false)
+    }, 450)
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -402,7 +411,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [router, supabase])
 
   const currency = profile?.preferred_currency ?? 'INR'
-  const isAllSpaces = currentSpace === null
+  const isAllSpaces = !loading && currentSpace === null
 
   return (
     <AppContext.Provider
@@ -414,6 +423,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         spaces,
         currentSpace,
         isAllSpaces,
+        isSwitchingSpace,
         currency,
         loading,
         setCurrentSpace,
@@ -426,7 +436,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshSpaces,
       }}
     >
-      {children}
+      {loading ? (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-opacity duration-300">
+          <div className="flex flex-col items-center gap-5 -mt-10 animate-in fade-in duration-300">
+            {/* Apple-styled squircle badge */}
+            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border-primary)] shadow-sm flex items-center justify-center relative">
+              <Layers className="w-7 h-7 text-[var(--color-text-primary)] animate-pulse" />
+            </div>
+
+            {/* Apple fluid dot loader */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-secondary)] animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-secondary)] animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-secondary)] animate-bounce" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AppContext.Provider>
   )
 }
