@@ -30,12 +30,14 @@ export default function SignupPage() {
     setServerError(null)
     const supabase = createClient()
 
+    const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+
     const { data, error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
       options: {
         data: { display_name: values.displayName },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${redirectOrigin}/login`,
       },
     })
 

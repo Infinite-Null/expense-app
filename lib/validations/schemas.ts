@@ -58,6 +58,7 @@ export const expenseSchema = z.object({
     .enum(['cash', 'credit_card', 'debit_card', 'upi', 'net_banking', 'wallet', 'other'])
     .optional()
     .nullable(),
+  space_id: z.string().optional().nullable(),
   transaction_date: z.string().min(1, { message: 'Date is required.' }),
   description: z.string().max(500).trim().optional().nullable(),
   notes: z.string().max(1000).trim().optional().nullable(),
@@ -102,6 +103,20 @@ export const profileSchema = z.object({
   theme_preference: z.enum(['light', 'dark', 'system']),
 })
 
+export const spaceSchema = z.object({
+  name: z
+    .string()
+    .min(1, { message: 'Space name is required.' })
+    .max(50, { message: 'Space name must be 50 characters or less.' })
+    .trim(),
+  icon: z.string().optional().nullable(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, { message: 'Please enter a valid hex color.' })
+    .optional()
+    .nullable(),
+})
+
 export type LoginFormValues = z.infer<typeof loginSchema>
 export type SignupFormValues = z.infer<typeof signupSchema>
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
@@ -110,3 +125,4 @@ export type ExpenseFormValues = z.infer<typeof expenseSchema>
 export type TagFormValues = z.infer<typeof tagSchema>
 export type CategoryFormValues = z.infer<typeof categorySchema>
 export type ProfileFormValues = z.infer<typeof profileSchema>
+export type SpaceFormValues = z.infer<typeof spaceSchema>

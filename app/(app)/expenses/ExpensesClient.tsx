@@ -167,6 +167,13 @@ export function ExpensesClient({
         if (filters.dateTo) {
           query = query.lte('transaction_date', filters.dateTo)
         }
+        if (!app.isAllSpaces && app.currentSpace && app.currentSpace.id !== 'default-space') {
+          if (app.currentSpace.is_default) {
+            query = query.or(`space_id.eq.${app.currentSpace.id},space_id.is.null`)
+          } else {
+            query = query.eq('space_id', app.currentSpace.id)
+          }
+        }
 
         const { data, count, error } = await query
 
@@ -199,15 +206,15 @@ export function ExpensesClient({
         setLoading(false)
       }
     },
-    [page, filters, sortField, sortDir, toastError]
+    [page, filters, sortField, sortDir, toastError, app.currentSpace?.id, app.isAllSpaces]
   )
 
-  // Refetch when filters/sort change
+  // Refetch when filters/sort or space change
   useEffect(() => {
     setPage(0)
     fetchExpenses(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, sortField, sortDir])
+  }, [filters, sortField, sortDir, app.currentSpace?.id, app.isAllSpaces])
 
   function handleSearchChange(val: string) {
     clearTimeout(searchTimer.current)

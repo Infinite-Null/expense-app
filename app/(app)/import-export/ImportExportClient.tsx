@@ -143,6 +143,14 @@ export function ImportExportClient({
         query = query.gte('transaction_date', start)
       }
 
+      if (!app.isAllSpaces && app.currentSpace && app.currentSpace.id !== 'default-space') {
+        if (app.currentSpace.is_default) {
+          query = query.or(`space_id.eq.${app.currentSpace.id},space_id.is.null`)
+        } else {
+          query = query.eq('space_id', app.currentSpace.id)
+        }
+      }
+
       const { data, error } = await query
       if (error) throw error
 
@@ -427,6 +435,7 @@ export function ImportExportClient({
         .from('expenses')
         .insert({
           user_id: user.id,
+          space_id: app.currentSpace?.id ?? app.spaces.find((s) => s.is_default)?.id ?? null,
           title: row.title,
           amount: row.amount,
           currency: row.currency || defaultCurrency,

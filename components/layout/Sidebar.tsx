@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils/cn'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { SpaceSwitcher } from '@/components/layout/SpaceSwitcher'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -66,16 +67,9 @@ export function Sidebar({ userEmail, displayName }: SidebarProps) {
         borderRight: '0.5px solid var(--color-border-primary)',
       }}
     >
-      {/* Brand Header */}
-      <div className="flex items-center justify-between px-6 pt-7 pb-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-sm transition-transform group-hover:scale-105">
-            S
-          </div>
-          <span className="text-[0.9375rem] font-semibold tracking-tight text-[var(--color-text-primary)]">
-            Spendly
-          </span>
-        </Link>
+      {/* Organization / Space Switcher */}
+      <div className="px-3 pt-5 pb-3">
+        <SpaceSwitcher />
       </div>
 
       {/* Quick Add Button */}
@@ -180,14 +174,9 @@ export function MobileNav() {
           backdropFilter: 'blur(2px) saturate(190%)',
         }}
       >
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-xs">
-            S
-          </div>
-          <span className="font-semibold text-sm tracking-tight text-[var(--color-text-primary)]">
-            Spendly
-          </span>
-        </Link>
+        <div className="flex-1 max-w-[210px]">
+          <SpaceSwitcher isMobile />
+        </div>
         <Link
           href="/expenses/new"
           className="btn-primary text-xs px-3 py-1.5 h-8 rounded-[var(--radius-md)] shadow-xs"

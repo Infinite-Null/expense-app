@@ -94,14 +94,28 @@ export function AnalyticsClient({
 
     if (filterCategory) query = query.eq('category_id', filterCategory)
 
-    const { data: curr } = await query
-
-    // Previous period
-    const { data: prevData } = await supabase
+    let prevQuery = supabase
       .from('expenses')
       .select('amount, transaction_date, category_id')
       .gte('transaction_date', format(prev.from, 'yyyy-MM-dd'))
       .lte('transaction_date', format(prev.to, 'yyyy-MM-dd'))
+
+    if (filterCategory) prevQuery = prevQuery.eq('category_id', filterCategory)
+
+    if (!app.isAllSpaces && app.currentSpace && app.currentSpace.id !== 'default-space') {
+      if (app.currentSpace.is_default) {
+        query = query.or(`space_id.eq.${app.currentSpace.id},space_id.is.null`)
+        prevQuery = prevQuery.or(`space_id.eq.${app.currentSpace.id},space_id.is.null`)
+      } else {
+        query = query.eq('space_id', app.currentSpace.id)
+        prevQuery = prevQuery.eq('space_id', app.currentSpace.id)
+      }
+    }
+
+    const [{ data: curr }, { data: prevData }] = await Promise.all([
+      query,
+      prevQuery,
+    ])
 
     setExpenses((curr ?? []).map((e: any) => ({
       ...e,
@@ -110,7 +124,7 @@ export function AnalyticsClient({
     })))
     setPrevExpenses(prevData ?? [])
     setLoading(false)
-  }, [dateFrom, dateTo, filterCategory])
+  }, [dateFrom, dateTo, filterCategory, app.currentSpace?.id, app.isAllSpaces])
 
   useEffect(() => { fetchData() }, [fetchData])
 

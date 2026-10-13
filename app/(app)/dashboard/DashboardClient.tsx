@@ -52,9 +52,73 @@ interface DashboardData {
 
 let cachedDashboardData: DashboardData | null = null
 
-async function loadDashboardMetrics(userId: string, supabase: ReturnType<typeof createClient>): Promise<DashboardData> {
+async function loadDashboardMetrics(
+  userId: string,
+  supabase: ReturnType<typeof createClient>,
+  spaceId?: string | null,
+  isDefaultSpace?: boolean
+): Promise<DashboardData> {
   const { from: thisMonthFrom, to: thisMonthTo } = getCurrentMonthRange()
   const { from: prevMonthFrom, to: prevMonthTo } = getPreviousMonthRange()
+
+  let qThisMonth = supabase
+    .from('expenses')
+    .select('amount, transaction_date, category_id')
+    .eq('user_id', userId)
+    .gte('transaction_date', thisMonthFrom)
+    .lte('transaction_date', thisMonthTo)
+    .order('transaction_date', { ascending: false })
+
+  let qPrevMonth = supabase
+    .from('expenses')
+    .select('amount')
+    .eq('user_id', userId)
+    .gte('transaction_date', prevMonthFrom)
+    .lte('transaction_date', prevMonthTo)
+
+  let qRecent = supabase
+    .from('expenses')
+    .select(`
+      id, title, amount, currency, transaction_date, merchant,
+      categories:category_id ( id, name, icon, color )
+    `)
+    .eq('user_id', userId)
+    .order('transaction_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  let qLargest = supabase
+    .from('expenses')
+    .select('title, amount')
+    .eq('user_id', userId)
+    .order('amount', { ascending: false })
+    .limit(1)
+
+  let qCategory = supabase
+    .from('expenses')
+    .select(`
+      amount,
+      categories:category_id ( id, name, color )
+    `)
+    .eq('user_id', userId)
+    .gte('transaction_date', thisMonthFrom)
+    .lte('transaction_date', thisMonthTo)
+
+  if (spaceId && spaceId !== 'default-space') {
+    if (isDefaultSpace) {
+      qThisMonth = qThisMonth.or(`space_id.eq.${spaceId},space_id.is.null`)
+      qPrevMonth = qPrevMonth.or(`space_id.eq.${spaceId},space_id.is.null`)
+      qRecent = qRecent.or(`space_id.eq.${spaceId},space_id.is.null`)
+      qLargest = qLargest.or(`space_id.eq.${spaceId},space_id.is.null`)
+      qCategory = qCategory.or(`space_id.eq.${spaceId},space_id.is.null`)
+    } else {
+      qThisMonth = qThisMonth.eq('space_id', spaceId)
+      qPrevMonth = qPrevMonth.eq('space_id', spaceId)
+      qRecent = qRecent.eq('space_id', spaceId)
+      qLargest = qLargest.eq('space_id', spaceId)
+      qCategory = qCategory.eq('space_id', spaceId)
+    }
+  }
 
   const [
     { data: thisMonthExpenses },
@@ -63,45 +127,11 @@ async function loadDashboardMetrics(userId: string, supabase: ReturnType<typeof 
     { data: largestExpense },
     { data: categoryData },
   ] = await Promise.all([
-    supabase
-      .from('expenses')
-      .select('amount, transaction_date, category_id')
-      .eq('user_id', userId)
-      .gte('transaction_date', thisMonthFrom)
-      .lte('transaction_date', thisMonthTo)
-      .order('transaction_date', { ascending: false }),
-    supabase
-      .from('expenses')
-      .select('amount')
-      .eq('user_id', userId)
-      .gte('transaction_date', prevMonthFrom)
-      .lte('transaction_date', prevMonthTo),
-    supabase
-      .from('expenses')
-      .select(`
-        id, title, amount, currency, transaction_date, merchant,
-        categories:category_id ( id, name, icon, color )
-      `)
-      .eq('user_id', userId)
-      .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(10),
-    supabase
-      .from('expenses')
-      .select('title, amount')
-      .eq('user_id', userId)
-      .order('amount', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('expenses')
-      .select(`
-        amount,
-        categories:category_id ( id, name, color )
-      `)
-      .eq('user_id', userId)
-      .gte('transaction_date', thisMonthFrom)
-      .lte('transaction_date', thisMonthTo),
+    qThisMonth,
+    qPrevMonth,
+    qRecent,
+    qLargest.maybeSingle(),
+    qCategory,
   ])
 
   const thisMonthTotal = (thisMonthExpenses ?? []).reduce((s, e) => s + Number(e.amount), 0)
@@ -211,7 +241,7 @@ export function DashboardClient({
   categoryBreakdown: propCategoryBreakdown,
 }: Partial<DashboardClientProps> = {}) {
   const { resolvedTheme } = useTheme()
-  const { user, profile } = useApp()
+  const { user, profile, currentSpace, isAllSpaces } = useApp()
 
   const displayName = propDisplayName ?? profile?.display_name
   const currency = propCurrency ?? profile?.preferred_currency ?? 'INR'
@@ -243,11 +273,13 @@ export function DashboardClient({
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (!currentUser) return
 
-    const res = await loadDashboardMetrics(currentUser.id, supabase)
-    cachedDashboardData = res
+    const spaceId = isAllSpaces ? null : currentSpace?.id
+    const isDefault = currentSpace?.is_default ?? false
+
+    const res = await loadDashboardMetrics(currentUser.id, supabase, spaceId, isDefault)
     setData(res)
     setLoading(false)
-  }, [propThisMonthTotal])
+  }, [propThisMonthTotal, currentSpace?.id, currentSpace?.is_default, isAllSpaces])
 
   useEffect(() => {
     loadData()

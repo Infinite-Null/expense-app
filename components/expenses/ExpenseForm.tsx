@@ -14,6 +14,7 @@ import { formatDateForInput } from '@/lib/utils/dates'
 import type { Category, Tag, Expense } from '@/lib/types/database'
 import { cn } from '@/lib/utils/cn'
 import { getTagColor } from '@/lib/utils/colors'
+import { useApp } from '@/components/providers/AppProvider'
 
 const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'JPY', 'AED', 'SGD', 'CAD', 'AUD']
 const PAYMENT_METHODS = [
@@ -41,12 +42,20 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   const router = useRouter()
   const { success, error: toastError } = useToast()
+  const { spaces, currentSpace } = useApp()
 
   const [selectedTags, setSelectedTags] = useState<Tag[]>(expense?.tags ?? [])
   const [newTagName, setNewTagName] = useState('')
   const [creatingTag, setCreatingTag] = useState(false)
 
   const isEditing = !!expense
+
+  const initialSpaceId =
+    expense?.space_id ??
+    currentSpace?.id ??
+    spaces.find((s) => s.is_default)?.id ??
+    spaces[0]?.id ??
+    null
 
   const {
     register,
@@ -59,6 +68,7 @@ export function ExpenseForm({
       title: expense?.title ?? '',
       amount: expense?.amount ? String(expense.amount) : '',
       currency: expense?.currency ?? defaultCurrency,
+      space_id: initialSpaceId,
       category_id: expense?.category_id ?? null,
       merchant: expense?.merchant ?? '',
       payment_method: expense?.payment_method ?? null,
@@ -109,8 +119,15 @@ export function ExpenseForm({
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const targetSpaceId =
+      values.space_id ||
+      currentSpace?.id ||
+      spaces.find((s) => s.is_default)?.id ||
+      null
+
     const payload = {
       user_id: user.id,
+      space_id: targetSpaceId,
       title: values.title,
       description: values.description || null,
       amount: parseFloat(values.amount),
@@ -206,6 +223,21 @@ export function ExpenseForm({
         error={errors.title?.message}
         {...register('title')}
       />
+
+      {/* Space Selector */}
+      {spaces.length > 1 && (
+        <Select
+          label="Space"
+          id="expense-space"
+          {...register('space_id')}
+        >
+          {spaces.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name} {s.is_default ? '(Default)' : ''}
+            </option>
+          ))}
+        </Select>
+      )}
 
       {/* Category + Date */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
