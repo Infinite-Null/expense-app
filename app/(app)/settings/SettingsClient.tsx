@@ -17,6 +17,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  LogOut,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -173,16 +174,44 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
     router.push('/signup')
   }
 
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  async function handleLogout() {
+    setIsLoggingOut(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (e) {
+      console.error('Logout failed:', e)
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-12">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
-          Settings
-        </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
-          Manage your account preferences, appearance, and regional settings
-        </p>
+      {/* Page Title & Mobile Logout Button */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            Settings
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+            Manage your account preferences, appearance, and regional settings
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--color-border-primary)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 active:scale-95 transition-all shadow-2xs shrink-0"
+          aria-label="Log Out"
+        >
+          <LogOut className="w-3.5 h-3.5 text-red-500" />
+          <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit(handleProfileSave)} className="space-y-8">
@@ -503,6 +532,24 @@ export function SettingsClient({ user: propUser, profile: initialProfile }: Sett
           <span>Open Import / Export</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
+      </div>
+
+      {/* Mobile Account Session & Sign Out Card */}
+      <div className="md:hidden apple-card p-5 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[var(--color-text-secondary)]">Signed In As</p>
+          <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate mt-0.5">{user.email}</p>
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="text-xs h-9 px-3.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 shrink-0 gap-1.5"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+        </Button>
       </div>
 
       {/* Danger Zone */}
