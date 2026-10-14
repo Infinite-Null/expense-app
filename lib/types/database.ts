@@ -228,6 +228,27 @@ export interface Database {
           }
         ]
       }
+      health: {
+        Row: {
+          id: number
+          status: string
+          message: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          status?: string
+          message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          status?: string
+          message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

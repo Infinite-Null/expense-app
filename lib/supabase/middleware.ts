@@ -38,18 +38,22 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require auth
-  const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
+  if (pathname.startsWith('/api/health') || pathname === '/health') {
+    return supabaseResponse
+  }
+
+  const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
   // Redirect unauthenticated users to login
-  if (!user && !isPublicRoute) {
+  if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && isPublicRoute) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
