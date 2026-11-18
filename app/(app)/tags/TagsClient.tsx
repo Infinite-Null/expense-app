@@ -154,18 +154,21 @@ export function TagsClient({ tags: initial }: TagsClientProps = {}) {
 
       {/* Filter / Search Bar */}
       <div className="apple-card p-4 flex items-center gap-3">
-        <Search className="w-4 h-4 text-[var(--color-text-tertiary)] shrink-0" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tags..."
-          className="bg-transparent border-none outline-none text-sm w-full text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)]"
-        />
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 z-10 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-secondary)]" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tags..."
+            aria-label="Search tags"
+            className="input-base pl-9 text-sm"
+          />
+        </div>
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors px-2 py-0.5"
+            className="btn-ghost px-2 py-1.5 text-xs"
           >
             Clear
           </button>

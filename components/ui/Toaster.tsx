@@ -1,8 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useRef } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import type { ToastElement } from './SakugaControls'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -41,13 +41,6 @@ const ICONS = {
   info: Info,
 }
 
-const STYLES = {
-  success: 'border-[var(--color-success)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]',
-  error: 'border-[var(--color-error)] bg-[var(--color-error-bg)] text-[var(--color-error-text)]',
-  warning: 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]',
-  info: 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-accent-text)]',
-}
-
 function ToastItem({
   toast,
   onDismiss,
@@ -56,50 +49,72 @@ function ToastItem({
   onDismiss: (id: string) => void
 }) {
   const Icon = ICONS[toast.type]
+  const ref = useRef<ToastElement>(null)
+
+  useEffect(() => {
+    const element = ref.current
+    let mounted = true
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+    if (!element?.show) fallbackTimer = setTimeout(() => onDismiss(toast.id), toast.duration ?? 4000)
+    void customElements.whenDefined('sakuga-toast').then(() => {
+      if (!mounted) return
+      clearTimeout(fallbackTimer)
+      element?.show()
+    })
+    return () => {
+      mounted = false
+      clearTimeout(fallbackTimer)
+    }
+  }, [onDismiss, toast.duration, toast.id])
 
   return (
-    <div
-      role="alert"
-      aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-      className={cn(
-        'toast-in flex items-start gap-3 w-full max-w-sm p-4 rounded-[var(--radius-lg)] border shadow-[var(--shadow-lg)] backdrop-blur-sm',
-        STYLES[toast.type]
-      )}
+    <sakuga-toast
+      ref={ref}
+      duration={(toast.duration ?? 4000) / 1000}
+      onclose={() => onDismiss(toast.id)}
+      className="sakuga-toast"
+      data-variant={toast.type}
     >
-      <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" strokeWidth={2} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold leading-snug">{toast.title}</p>
-        {toast.description && (
-          <p className="text-sm opacity-80 mt-0.5 leading-snug">{toast.description}</p>
-        )}
-      </div>
-      <button
-        onClick={() => onDismiss(toast.id)}
-        className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity p-0.5 rounded"
-        aria-label="Dismiss notification"
+      <div
+        role={toast.type === 'error' ? 'alert' : 'status'}
+        className="flex items-start gap-3 p-3.5"
       >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
+        <Icon aria-hidden="true" className="w-5 h-5 mt-0.5 flex-shrink-0" strokeWidth={2} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold leading-snug">{toast.title}</p>
+          {toast.description && (
+            <p className="text-sm opacity-80 mt-0.5 leading-snug">{toast.description}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (ref.current?.hide) ref.current.hide()
+            else onDismiss(toast.id)
+          }}
+          className="btn-ghost size-7 shrink-0 rounded-md p-0"
+          aria-label="Dismiss notification"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </sakuga-toast>
   )
 }
 
-export function Toaster() {
+export function Toaster({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
-  const timerRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const dismiss = useCallback((id: string) => {
-    clearTimeout(timerRefs.current[id])
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
   const toast = useCallback(
     ({ type, title, description, duration = 4000 }: Omit<Toast, 'id'>) => {
       const id = Math.random().toString(36).slice(2)
-      setToasts((prev) => [...prev.slice(-4), { id, type, title, description }])
-      timerRefs.current[id] = setTimeout(() => dismiss(id), duration)
+      setToasts((prev) => [...prev.slice(-4), { id, type, title, description, duration }])
     },
-    [dismiss]
+    []
   )
 
   const success = useCallback(
@@ -121,14 +136,13 @@ export function Toaster() {
 
   return (
     <ToastContext.Provider value={{ toast, success, error, warning, info }}>
+      {children}
       <div
         aria-label="Notifications"
-        className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"
+        className="fixed inset-x-4 bottom-5 z-[110] flex flex-col gap-3 pointer-events-none sm:left-auto sm:bottom-6 sm:right-6 sm:w-96"
       >
         {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto">
-            <ToastItem toast={t} onDismiss={dismiss} />
-          </div>
+          <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
         ))}
       </div>
     </ToastContext.Provider>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { Button } from './Button'
 import { cn } from '@/lib/utils/cn'
 
 interface DialogProps {
@@ -71,7 +72,7 @@ export function Dialog({
     >
       {/* Full-screen Backdrop covering entire viewport */}
       <div
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-[var(--color-bg-overlay)] backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden
       />
@@ -80,10 +81,7 @@ export function Dialog({
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full rounded-[var(--radius-xl)] shadow-2xl',
-          'bg-white dark:bg-[#1c1c1e] text-zinc-900 dark:text-zinc-100',
-          'border border-zinc-200/90 dark:border-white/10',
-          'backdrop-blur-2xl fade-in z-10',
+          'popover-surface relative w-full rounded-[var(--radius-xl)] fade-in z-10',
           SIZE_CLASS[size],
           className
         )}
@@ -93,22 +91,23 @@ export function Dialog({
           <div>
             <h2
               id="dialog-title"
-              className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 leading-tight tracking-tight"
+              className="text-lg font-semibold text-[var(--color-text-primary)] leading-tight tracking-tight"
             >
               {title}
             </h2>
             {description && (
               <p
                 id="dialog-description"
-                className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed"
+                className="text-sm text-[var(--color-text-secondary)] mt-1.5 leading-relaxed"
               >
                 {description}
               </p>
             )}
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="flex-shrink-0 ml-4 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="btn-ghost ml-4 size-9 shrink-0 p-0"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -149,26 +148,18 @@ export function ConfirmDialog({
   return (
     <Dialog open={open} onClose={onClose} title={title} description={description} size="sm">
       <div className="flex gap-3 mt-6 pt-1">
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 h-10 px-4 rounded-xl text-sm font-medium transition-all bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700/60 active:scale-95 cursor-pointer"
-        >
+        <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
           {cancelLabel}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={variant === 'destructive' ? 'destructive' : 'primary'}
           onClick={onConfirm}
-          disabled={loading}
-          className={cn(
-            'flex-1 h-10 px-4 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 cursor-pointer',
-            variant === 'destructive'
-              ? 'bg-red-600 hover:bg-red-700 text-white shadow-sm'
-              : 'bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black shadow-sm'
-          )}
+          loading={loading}
+          className="flex-1"
         >
           {loading ? 'Loading...' : confirmLabel}
-        </button>
+        </Button>
       </div>
     </Dialog>
   )

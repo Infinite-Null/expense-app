@@ -12,8 +12,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public assets (icons, images, manifest, sw)
+     * - public assets (icons, images, manifest, service worker, Sakuga controls)
      */
-    '/((?!_next/static|_next/image|favicon.ico|icon-|manifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon-|manifest|sw.js|sakuga-vfx/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

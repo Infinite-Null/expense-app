@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Plus, Tag as TagIcon } from 'lucide-react'
+import { Plus, Tag as TagIcon } from 'lucide-react'
 import { expenseSchema, type ExpenseFormValues } from '@/lib/validations/schemas'
 import { createClient } from '@/lib/supabase/client'
 import { Input, Textarea, Select } from '@/components/ui/FormFields'
 import { Button } from '@/components/ui/Button'
+import { Toggle } from '@/components/ui/SakugaControls'
 import { useToast } from '@/components/ui/Toaster'
 import { formatDateForInput } from '@/lib/utils/dates'
 import type { Category, Tag, Expense } from '@/lib/types/database'
-import { cn } from '@/lib/utils/cn'
 import { getTagColor } from '@/lib/utils/colors'
 import { useApp } from '@/components/providers/AppProvider'
 
@@ -368,39 +368,13 @@ export function ExpenseForm({
         </div>
       </div>
 
-      {/* Recurring toggle */}
-      <div className="flex items-center gap-3">
-        <Controller
-          name="is_recurring"
-          control={control}
-          render={({ field }) => (
-            <button
-              type="button"
-              role="switch"
-              aria-checked={field.value}
-              onClick={() => field.onChange(!field.value)}
-              className={cn(
-                'relative w-11 h-6 rounded-full transition-colors duration-200',
-                field.value ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-surface-tertiary)]'
-              )}
-              id="expense-recurring"
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200',
-                  field.value && 'translate-x-5'
-                )}
-              />
-            </button>
-          )}
-        />
-        <label
-          htmlFor="expense-recurring"
-          className="text-sm text-[var(--color-text-primary)] cursor-pointer select-none"
-        >
-          Recurring expense
-        </label>
-      </div>
+      <Controller
+        name="is_recurring"
+        control={control}
+        render={({ field }) => (
+          <Toggle id="expense-recurring" label="Recurring expense" checked={field.value} onChange={field.onChange} />
+        )}
+      />
 
       {/* Actions */}
       <div className="flex gap-3 pt-4 sm:pt-6">

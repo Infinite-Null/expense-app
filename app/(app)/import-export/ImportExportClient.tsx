@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/Toaster'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/FormFields'
 import type { Category, Tag } from '@/lib/types/database'
-import { cn } from '@/lib/utils/cn'
+import { Checkbox, Progress, Tabs } from '@/components/ui/SakugaControls'
 
 import { useApp } from '@/components/providers/AppProvider'
 
@@ -505,33 +505,19 @@ export function ImportExportClient({
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="segmented-control w-fit">
-        <button
-          onClick={() => setActiveTab('export')}
-          className={cn(
-            'segmented-item flex items-center gap-2',
-            activeTab === 'export' && 'active'
-          )}
-        >
-          <Download className="w-3.5 h-3.5" />
-          Export Data
-        </button>
-        <button
-          onClick={() => setActiveTab('import')}
-          className={cn(
-            'segmented-item flex items-center gap-2',
-            activeTab === 'import' && 'active'
-          )}
-        >
-          <Upload className="w-3.5 h-3.5" />
-          Import CSV
-        </button>
-      </div>
+      <Tabs<TabType>
+        label="Import & Export"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={[
+          { value: 'export', label: 'Export Data' },
+          { value: 'import', label: 'Import CSV' },
+        ]}
+      />
 
       {/* ==================== EXPORT TAB ==================== */}
       {activeTab === 'export' && (
-        <div className="space-y-6">
+        <div className="space-y-6" role="tabpanel" aria-label="Export Data">
           {/* CSV Export Card */}
           <div className="apple-card p-6 space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -626,7 +612,10 @@ export function ImportExportClient({
 
       {/* ==================== IMPORT TAB ==================== */}
       {activeTab === 'import' && (
-        <div className="space-y-6">
+        <div className="space-y-6" role="tabpanel" aria-label="Import CSV">
+          {importStep > 1 && (
+            <Progress label="CSV import progress" value={(importStep - 1) / 3} doneLabel="Import complete" />
+          )}
           {/* Step 1: Upload */}
           {importStep === 1 && (
             <div className="apple-card p-8 text-center space-y-4">
@@ -808,16 +797,11 @@ export function ImportExportClient({
 
               {/* Duplicate Handling Option */}
               <div className="flex items-center gap-3 p-3.5 rounded-lg bg-[var(--color-fill-secondary)]">
-                <input
-                  type="checkbox"
-                  id="skip-dup"
-                  checked={skipDuplicates}
-                  onChange={(e) => setSkipDuplicates(e.target.checked)}
-                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                />
-                <label htmlFor="skip-dup" className="text-xs text-[var(--color-text-primary)] cursor-pointer">
-                  <strong>Skip potential duplicate transactions</strong> (matches identical date, title, and amount)
-                </label>
+                <Checkbox checked={skipDuplicates} onChange={setSkipDuplicates}>
+                  <span className="text-xs">
+                    <strong>Skip potential duplicate transactions</strong> (matches identical date, title, and amount)
+                  </span>
+                </Checkbox>
               </div>
 
               {/* Preview Table */}

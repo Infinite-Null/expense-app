@@ -175,7 +175,7 @@ export function MobileNav() {
         }}
       >
         <div className="flex-1 max-w-[210px]">
-          <SpaceSwitcher isMobile />
+          <SpaceSwitcher />
         </div>
         <Link
           href="/expenses/new"

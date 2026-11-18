@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, Fragment } from 'react'
+import { forwardRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Loader2 } from 'lucide-react'
 
@@ -47,6 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         className={cn(VARIANT_CLASS[variant], SIZE_CLASS[size], className)}
         {...props}
       >

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f5f5f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#1c1c1e' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f1012' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -72,11 +73,11 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         />
       </head>
       <body className="min-h-full antialiased">
+        <Script src="/sakuga-vfx/controls.js" type="module" />
         <ThemeProvider>
-          <PwaProvider>
-            {children}
-            <Toaster />
-          </PwaProvider>
+          <Toaster>
+            <PwaProvider>{children}</PwaProvider>
+          </Toaster>
         </ThemeProvider>
       </body>
     </html>

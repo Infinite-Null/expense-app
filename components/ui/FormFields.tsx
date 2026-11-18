@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -13,8 +13,9 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, leftIcon, rightIcon, className, id, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+  ({ label, error, hint, leftIcon, rightIcon, className, id, style, ...props }, ref) => {
+    const generatedId = useId()
+    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-') ?? generatedId
 
     return (
       <div className="w-full flex flex-col gap-1.5">
@@ -36,13 +37,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               'input-base',
               leftIcon && 'has-left-icon !pl-10',
               rightIcon && 'has-right-icon !pr-10',
-              error && 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[0_0_0_3px_var(--color-error-bg)]',
               className
             )}
             style={{
               ...(leftIcon ? { paddingLeft: '2.625rem' } : {}),
               ...(rightIcon ? { paddingRight: '2.625rem' } : {}),
-              ...props.style,
+              ...style,
             }}
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
@@ -79,7 +79,8 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, hint, className, id, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+    const generatedId = useId()
+    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-') ?? generatedId
 
     return (
       <div className="w-full flex flex-col gap-1.5">
@@ -93,19 +94,19 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           className={cn(
             'input-base resize-none',
-            error && 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[0_0_0_3px_var(--color-error-bg)]',
             className
           )}
           aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           {...props}
         />
         {error && (
-          <p className="form-error mt-0.5" role="alert">
+          <p id={`${inputId}-error`} className="form-error mt-0.5" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
+          <p id={`${inputId}-hint`} className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
         )}
       </div>
     )
@@ -123,7 +124,8 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, hint, placeholder, className, id, children, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+    const generatedId = useId()
+    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-') ?? generatedId
 
     return (
       <div className="w-full flex flex-col gap-1.5">
@@ -138,10 +140,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             className={cn(
               'input-base appearance-none cursor-pointer pr-8',
-              error && 'border-[var(--color-error)]',
               className
             )}
             aria-invalid={!!error}
+            aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
             {...props}
           >
             {placeholder && (
@@ -156,12 +158,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </div>
         </div>
         {error && (
-          <p className="form-error mt-0.5" role="alert">
+          <p id={`${inputId}-error`} className="form-error mt-0.5" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
+          <p id={`${inputId}-hint`} className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{hint}</p>
         )}
       </div>
     )

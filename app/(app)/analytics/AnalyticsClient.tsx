@@ -10,7 +10,6 @@ import { formatCurrency, formatCurrencyCompact, percentageChange, formatPercenta
 import { formatShortDate, formatMonthYear, getPreviousPeriod, getDateRangePresets } from '@/lib/utils/dates'
 import { format, parseISO, eachDayOfInterval, eachMonthOfInterval } from 'date-fns'
 import { TrendingDown, TrendingUp, Lightbulb, BarChart3, Calendar } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import type { Category, Tag } from '@/lib/types/database'
 import { getCategoryColor, getTagColor, getBadgeStyles } from '@/lib/utils/colors'
@@ -275,12 +274,8 @@ export function AnalyticsClient({
               key={p.key}
               type="button"
               onClick={() => applyPreset(p.key)}
-              className={cn(
-                'px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all select-none border shrink-0',
-                activePreset === p.key
-                  ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-semibold shadow-xs'
-                  : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border-primary)] hover:border-[var(--color-border-hover)]'
-              )}
+              aria-pressed={activePreset === p.key}
+              className="btn-secondary shrink-0 rounded-full px-3.5 py-1.5 text-xs"
             >
               {p.label}
             </button>

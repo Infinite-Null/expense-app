@@ -580,7 +580,7 @@ export function ExpensesClient({
                             e.stopPropagation()
                             setOpenMenu(isMenuOpen ? null : expense.id)
                           }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] active:scale-95 transition-all"
+                          className="btn-ghost size-8 rounded-full p-0"
                           aria-label="More actions"
                         >
                           <MoreHorizontal className="w-4 h-4" />
@@ -588,8 +588,7 @@ export function ExpensesClient({
 
                         {isMenuOpen && (
                           <div
-                            className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-black py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)] rounded-lg"
-                            style={{ boxShadow: 'var(--shadow-xl)' }}
+                            className="absolute right-0 top-full mt-1.5 w-48 popover-surface py-1.5 z-50 rounded-lg"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Link
@@ -701,7 +700,7 @@ export function ExpensesClient({
                           e.stopPropagation()
                           setOpenMenu(isMenuOpen ? null : expense.id)
                         }}
-                        className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] active:scale-95 transition-all"
+                        className="btn-ghost size-8 rounded-full p-0"
                         aria-label="More actions"
                       >
                         <MoreHorizontal className="w-4 h-4" />
@@ -709,8 +708,7 @@ export function ExpensesClient({
 
                       {isMenuOpen && (
                         <div
-                          className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-black py-1.5 z-50 shadow-2xl border border-[var(--color-border-primary)] rounded-lg"
-                          style={{ boxShadow: 'var(--shadow-xl)' }}
+                          className="absolute right-0 top-full mt-1.5 w-48 popover-surface py-1.5 z-50 rounded-lg"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Link
